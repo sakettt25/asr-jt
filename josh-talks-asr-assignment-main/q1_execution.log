@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Users\KIIT0001\Downloads\josh-talks-asr-assignment-main\josh-talks-asr-assignment-main\q1_whisper_finetune.py", line 23, in <module>
+    import torch
+  File "C:\Users\KIIT0001\AppData\Local\Programs\Python\Python310\lib\site-packages\torch\__init__.py", line 280, in <module>
+    _load_dll_libraries()
+  File "C:\Users\KIIT0001\AppData\Local\Programs\Python\Python310\lib\site-packages\torch\__init__.py", line 263, in _load_dll_libraries
+    raise err
+OSError: [WinError 127] The specified procedure could not be found. Error loading "C:\Users\KIIT0001\AppData\Local\Programs\Python\Python310\lib\site-packages\torch\lib\torch_cuda.dll" or one of its dependencies.

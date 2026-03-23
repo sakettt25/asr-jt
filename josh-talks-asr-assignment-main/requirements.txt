@@ -1,0 +1,66 @@
+# =======================================================
+# Josh Talks - AI Researcher Intern Assignment
+# Python Requirements
+# Install: pip install -r requirements.txt
+# =======================================================
+
+# Core ML / Audio
+torch>=2.1.0
+torchaudio>=2.1.0
+transformers>=4.37.0
+datasets>=2.16.0
+accelerate>=0.26.0
+evaluate>=0.4.1
+
+# Audio Processing
+librosa>=0.10.1
+soundfile>=0.12.1
+
+# NLP / Metrics
+jiwer>=3.0.3              # WER / CER computation
+sacrebleu>=2.3.1
+
+# Indic NLP (optional but recommended)
+indic-nlp-library>=0.91
+indic-transliteration>=2.3.56
+
+# Spell Checking (optional)
+pyenchant>=3.2.2          # needs system hunspell + hi_IN dictionary
+                          # sudo apt install hunspell-hi libenchant-2-2
+
+# Data Processing
+pandas>=2.1.0
+numpy>=1.26.0
+requests>=2.31.0
+tqdm>=4.66.1
+openpyxl>=3.1.2
+pypdf>=6.0.0
+
+# Visualization / Reporting
+matplotlib>=3.8.0
+seaborn>=0.13.0
+tabulate>=0.9.0
+
+# Jupyter (optional, for notebooks)
+jupyter>=1.0.0
+ipywidgets>=8.1.0
+
+# Web Demo (Flask backend)
+flask>=3.0.0
+flask-cors>=4.0.0
+gunicorn>=21.2.0
+
+# -- Installation Notes ----------------------------------
+# For CUDA 12.x support:
+#   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+#
+# For Hindi Hunspell dictionary:
+#   sudo apt-get install hunspell-hi
+#   (or download from: https://github.com/wooorm/dictionaries)
+#
+# For indic-transliteration:
+#   pip install indic-transliteration
+#
+# FLEURS dataset requires:
+#   pip install datasets[audio]
+#   and ffmpeg: sudo apt-get install ffmpeg

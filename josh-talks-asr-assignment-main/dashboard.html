@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Josh Talks | ASR Assignment Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0a0f;
+    --surface:   #12121a;
+    --surface2:  #1c1c28;
+    --border:    #2a2a3f;
+    --accent:    #ff6b35;
+    --accent2:   #7c3aed;
+    --accent3:   #10b981;
+    --text:      #e8e8f0;
+    --muted:     #7a7a9a;
+    --danger:    #ef4444;
+    --warn:      #f59e0b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── Premium gradient overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(255,107,53,.12) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(124,58,237,.1) 0%, transparent 50%),
+      radial-gradient(circle at 50% 0%, rgba(16,185,129,.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 32px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1.5px solid var(--border);
+    background: linear-gradient(180deg, rgba(10,10,15,.9) 0%, rgba(10,10,15,.8) 100%);
+    backdrop-filter: blur(30px);
+    box-shadow: 0 12px 40px rgba(0,0,0,.4), 0 0 1px rgba(255,107,53,.1);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .header-badges {
+    display: flex;
+    gap: 8px;
+  }
+
+  .logo-block { display: flex; align-items: center; gap: 16px; }
+
+  .logo-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    object-fit: cover;
+    box-shadow: 0 16px 48px rgba(255,107,53,.3),
+                inset 0 1px 0 rgba(255,255,255,.15),
+                0 0 24px rgba(255,107,53,.2);
+    transition: all .4s cubic-bezier(.34,.1,.68,.55);
+  }
+
+  .logo-icon:hover {
+    transform: translateY(-6px) scale(1.05);
+    box-shadow: 0 24px 64px rgba(255,107,53,.4),
+                inset 0 1px 0 rgba(255,255,255,.2),
+                0 0 32px rgba(255,107,53,.3);
+  }
+
+  .logo-text h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    text-shadow: 0 2px 8px rgba(255,107,53,.15);
+  }
+
+  .logo-text p {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .header-meta {
+    text-align: right;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.9;
+    letter-spacing: 0.4px;
+    font-weight: 400;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 17px;
+    border-radius: 28px;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, rgba(255,107,53,.18), rgba(255,107,53,.08));
+    color: #fff;
+    border: 1.5px solid rgba(255,107,53,.3);
+    transition: all .35s cubic-bezier(.34,.1,.68,.55);
+    box-shadow: 0 4px 12px rgba(255,107,53,.15);
+    text-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+
+  .badge:hover {
+    background: linear-gradient(135deg, rgba(255,107,53,.28), rgba(255,107,53,.15));
+    border-color: rgba(255,107,53,.5);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255,107,53,.25);
+  }
+
+  .badge-orange  { background: linear-gradient(135deg, rgba(255,107,53,.18), rgba(255,107,53,.08)); color: #ff8c5a; border: 1.5px solid rgba(255,107,53,.3); }
+  .badge-purple  { background: linear-gradient(135deg, rgba(124,58,237,.18), rgba(124,58,237,.08)); color: #d8c8ff; border: 1.5px solid rgba(124,58,237,.35); }
+  .badge-green   { background: linear-gradient(135deg, rgba(16,185,129,.18), rgba(16,185,129,.08)); color: #6ee7b7; border: 1.5px solid rgba(16,185,129,.3); }
+  .badge-red     { background: linear-gradient(135deg, rgba(239,68,68,.18), rgba(239,68,68,.08)); color: #fca5a5; border: 1.5px solid rgba(239,68,68,.3); }
+  .badge-alt     { background: linear-gradient(135deg, rgba(124,58,237,.18), rgba(124,58,237,.08)); color: #d8c8ff; border: 1.5px solid rgba(124,58,237,.35); }
+
+  /* ── Nav tabs ── */
+  .tabs-wrapper {
+    position: sticky; top: 0; z-index: 100;
+    background: linear-gradient(180deg, rgba(10,10,15,.95) 0%, rgba(10,10,15,.85) 100%);
+    backdrop-filter: blur(30px);
+    border-bottom: 1.5px solid var(--border);
+    padding: 0 60px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.3), 0 0 1px rgba(255,107,53,.08);
+  }
+
+  .tabs {
+    display: flex; gap: 0;
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 16px 28px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    color: var(--muted);
+    border-bottom: 2.5px solid transparent;
+    transition: all .35s cubic-bezier(.34,.1,.68,.55);
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .tab:hover {
+    color: var(--text);
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    text-shadow: 0 0 16px rgba(255,107,53,.5);
+    font-weight: 800;
+  }
+
+  /* ── Main layout ── */
+  main { position: relative; z-index: 1; padding: 48px 60px; max-width: 1400px; }
+
+  .section { display: none; animation: fadeIn .3s ease; }
+  .section.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex; align-items: flex-start; gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .q-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 88px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #ff7b4d 0%, #ff8c5a 50%, #ffaa7a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 0.9;
+    flex-shrink: 0;
+    filter: drop-shadow(0 10px 28px rgba(255,107,53,.3));
+    text-shadow: 0 2px 8px rgba(255,107,53,.2);
+    letter-spacing: -1px;
+  }
+
+  .q-meta h2 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  .q-meta p {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 680px;
+    line-height: 1.7;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: linear-gradient(135deg, rgba(18,18,26,.5) 0%, rgba(28,28,40,.4) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: all .4s cubic-bezier(.34,.1,.68,.55);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 40px rgba(0,0,0,.25);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1.5px;
+    background: linear-gradient(90deg, rgba(255,107,53,0), rgba(255,107,53,.6), rgba(255,107,53,0));
+    opacity: 0;
+    transition: opacity .4s;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: radial-gradient(circle at 30% 30%, rgba(255,107,53,.05), transparent 60%);
+    opacity: 0;
+    transition: opacity .4s;
+    pointer-events: none;
+  }
+
+  .card:hover {
+    border-color: rgba(255,107,53,.4);
+    background: linear-gradient(135deg, rgba(18,18,26,.7) 0%, rgba(28,28,40,.6) 100%);
+    box-shadow: 0 20px 60px rgba(255,107,53,.2), 0 0 1px rgba(255,107,53,.3);
+    transform: translateY(-2px);
+  }
+
+  .card:hover::before { opacity: 1; }
+  .card:hover::after { opacity: 1; }
+
+  .card-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #b0b8c8;
+    margin-bottom: 18px;
+    text-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+
+  /* ── Grid layouts ── */
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+
+  @media (max-width: 900px) {
+    .grid-3, .grid-2 { grid-template-columns: 1fr; }
+    header, .tabs-wrapper, main { padding-left: 24px; padding-right: 24px; }
+  }
+
+  /* ── Stat tiles ── */
+  .stat-tile {
+    background: linear-gradient(135deg, rgba(28,28,40,.5) 0%, rgba(42,42,63,.5) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    transition: all .4s cubic-bezier(.34,.1,.68,.55);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.05);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(255,107,53,.1), transparent 70%);
+    opacity: 0;
+    transition: opacity .4s;
+    pointer-events: none;
+  }
+
+  .stat-tile:hover {
+    border-color: rgba(255,107,53,.35);
+    background: linear-gradient(135deg, rgba(28,28,40,.7) 0%, rgba(42,42,63,.7) 100%);
+    box-shadow: 0 16px 48px rgba(255,107,53,.2), inset 0 1px 0 rgba(255,255,255,.1);
+    transform: translateY(-6px);
+  }
+
+  .stat-tile:hover::before { opacity: 1; }
+
+  .stat-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 48px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, #ff8c5a 0%, #ffaa7a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 6px 16px rgba(255,107,53,.25));
+    text-shadow: 0 2px 8px rgba(255,107,53,.1);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+  }
+
+  /* ── WER Table ── */
+  .wer-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .wer-table th {
+    padding: 14px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #b0b8c8;
+    border-bottom: 1.5px solid var(--border);
+    text-align: left;
+  }
+
+  .wer-table td {
+    padding: 16px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    font-weight: 400;
+  }
+
+  .wer-table tr:last-child td { border-bottom: none; }
+  .wer-table tr:hover td { background: var(--surface2); }
+
+  .wer-bar-wrap { display: flex; align-items: center; gap: 10px; }
+  .wer-bar {
+    height: 10px; border-radius: 5px;
+    background: linear-gradient(90deg, #ff6b35, #ff8c5a, #ffaa7a);
+    transition: all .7s cubic-bezier(.25,.46,.45,.94);
+    animation: growBar 1s cubic-bezier(.4,0,.2,1) forwards;
+    box-shadow: 0 6px 20px rgba(255,107,53,.3), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+
+  .wer-bar.good {
+    background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);
+    box-shadow: 0 6px 20px rgba(16,185,129,.3), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+
+  .wer-bar.warn {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24, #fcd34d);
+    box-shadow: 0 6px 20px rgba(245,158,11,.3), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+
+  .wer-bar.bad {
+    background: linear-gradient(90deg, #ef4444, #f87171, #fca5a5);
+    box-shadow: 0 6px 20px rgba(239,68,68,.3), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+
+  /* ── Error taxonomy ── */
+  .taxonomy-item {
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    transition: all .4s cubic-bezier(.34,.1,.68,.55);
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  }
+
+  .taxonomy-item:hover {
+    border-color: rgba(255,107,53,.35);
+    box-shadow: 0 12px 36px rgba(255,107,53,.15);
+    transform: translateY(-2px);
+  }
+
+  .taxonomy-header {
+    padding: 20px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, rgba(28,28,40,.6) 0%, rgba(20,20,32,.6) 100%);
+    cursor: pointer;
+    user-select: none;
+    transition: all .35s cubic-bezier(.34,.1,.68,.55);
+  }
+
+  .taxonomy-header:hover {
+    background: linear-gradient(135deg, rgba(28,28,40,.8) 0%, rgba(20,20,32,.8) 100%);
+  }
+
+  .taxonomy-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--text);
+  }
+
+  .taxonomy-count {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .count-pill {
+    background: linear-gradient(135deg, #ff7b4d, #ff8c5a, #ffaa7a);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 7px 16px;
+    border-radius: 24px;
+    box-shadow: 0 6px 16px rgba(255,107,53,.35), inset 0 1px 0 rgba(255,255,255,.3);
+    letter-spacing: 0.8px;
+    text-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+
+  .chevron {
+    transition: transform .3s cubic-bezier(.34,.1,.68,.55);
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .taxonomy-item.open .chevron {
+    transform: rotate(180deg);
+  }
+
+  .taxonomy-body {
+    display: none;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .taxonomy-item.open .taxonomy-body { display: block; }
+
+  .example-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 1fr;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 14px;
+    transition: all .3s cubic-bezier(.34,.1,.68,.55);
+    line-height: 1.6;
+  }
+
+  .example-row:hover {
+    padding-left: 6px;
+    background: rgba(255,107,53,.03);
+  }
+
+  .example-row:last-child { border-bottom: none; }
+  .example-row .ex-label {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding-top: 2px;
+  }
+  .ex-ref {
+    color: #6ee7b7;
+    font-family: 'Space Mono', monospace;
+    font-weight: 600;
+  }
+  .ex-hyp {
+    color: #fca5a5;
+    font-family: 'Space Mono', monospace;
+    font-weight: 600;
+  }
+
+  .pipeline-step {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 24px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(28,28,40,.4) 0%, rgba(20,20,32,.4) 100%);
+    border: 1.5px solid var(--border);
+    margin-bottom: 16px;
+    transition: all .4s cubic-bezier(.34,.1,.68,.55);
+    box-shadow: 0 8px 24px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  .pipeline-step:hover {
+    border-color: rgba(255,107,53,.3);
+    background: linear-gradient(135deg, rgba(28,28,40,.6) 0%, rgba(20,20,32,.6) 100%);
+    box-shadow: 0 12px 36px rgba(255,107,53,.12), inset 0 1px 0 rgba(255,255,255,.08);
+    transform: translateY(-2px);
+  }
+
+  .step-num {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #ff7b4d, #ff8c5a, #ffaa7a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 16px;
+    font-weight: 900;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(255,107,53,.35), inset 0 1px 0 rgba(255,255,255,.3);
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+
+  .step-content h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+
+  .step-content p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    letter-spacing: 0.2px;
+  }
+
+  /* ── Code / example blocks ── */
+  .code-block {
+    background: linear-gradient(135deg, rgba(10,10,15,.9) 0%, rgba(18,18,26,.6) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    overflow-x: auto;
+    margin-top: 12px;
+    color: #c0c8d8;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
+    letter-spacing: 0.2px;
+  }
+
+  .hi { color: #e8d5a3; }
+  .num { color: #6ee7b7; font-weight: 700; }
+  .en-tag { color: #60a5fa; }
+  .en-word { color: #34d399; }
+  .arrow { color: var(--muted); }
+
+  /* ── Lattice viz ── */
+  .lattice-wrap { overflow-x: auto; }
+
+  .lattice-svg-container {
+    background: linear-gradient(135deg, rgba(28,28,40,.4) 0%, rgba(20,20,32,.4) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 16px;
+    min-width: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
+    transition: all .4s cubic-bezier(.34,.1,.68,.55);
+  }
+
+  /* ── Fix cards ── */
+  .fix-card {
+    border-left: 4px solid var(--accent);
+    background: linear-gradient(135deg, rgba(255,107,53,.1) 0%, transparent 100%);
+    border-radius: 0 14px 14px 0;
+    padding: 24px;
+    margin-bottom: 16px;
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--accent);
+    box-shadow: 0 8px 24px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.05);
+    transition: all .4s cubic-bezier(.34,.1,.68,.55);
+  }
+
+  .fix-card:hover {
+    border-color: rgba(255,107,53,.3);
+    box-shadow: 0 12px 36px rgba(255,107,53,.15), inset 0 1px 0 rgba(255,255,255,.08);
+    transform: translateX(4px);
+  }
+
+  .fix-card h4 {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #ff8c5a;
+    letter-spacing: 0.3px;
+  }
+
+  .fix-card ol {
+    margin-left: 20px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+    letter-spacing: 0.2px;
+  }
+  .fix-card ol li { margin-bottom: 8px; }
+
+  /* ── Spell check table ── */
+  .spell-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .spell-table th, .spell-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+  .spell-table th {
+    color: #b0b8c8;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-family: 'Space Mono', monospace;
+    background: linear-gradient(90deg, rgba(28,28,40,.3), rgba(20,20,32,.3));
+    border-bottom: 1.5px solid var(--border);
+  }
+  .spell-table tr:hover td { background: linear-gradient(90deg, rgba(255,107,53,.08), transparent); }
+
+  .conf-pill {
+    font-size: 10px;
+    font-weight: 900;
+    padding: 6px 13px;
+    border-radius: 14px;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,.2);
+    text-shadow: 0 1px 2px rgba(0,0,0,.2);
+  }
+
+  .conf-high   { background: linear-gradient(135deg, rgba(16,185,129,.25), rgba(16,185,129,.1)); color: #6ee7b7; border: 1.5px solid rgba(16,185,129,.4); }
+  .conf-medium { background: linear-gradient(135deg, rgba(245,158,11,.25), rgba(245,158,11,.1)); color: #fcd34d; border: 1.5px solid rgba(245,158,11,.4); }
+  .conf-low    { background: linear-gradient(135deg, rgba(239,68,68,.25), rgba(239,68,68,.1)); color: #fca5a5; border: 1.5px solid rgba(239,68,68,.4); }
+
+  .correct   { color: var(--accent3); }
+  .incorrect { color: var(--danger); }
+
+  /* ── Footer ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 40px 60px;
+    border-top: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.3px;
+    font-weight: 400;
+    background: linear-gradient(180deg, transparent 0%, rgba(255,107,53,.08) 100%);
+    backdrop-filter: blur(10px);
+  }
+
+  /* ── Animated WER bars on load ── */
+  @keyframes growBar { from { width: 0 !important; } }
+
+  /* ── Progress ring ── */
+  .progress-ring-wrap { display: flex; align-items: center; gap: 24px; }
+  .ring-label { font-size: 13px; color: var(--muted); }
+  .ring-val   { font-family: 'Space Mono', monospace; font-size: 28px; font-weight: 700; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar {
+    width: 12px; height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(18,18,26,.3);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255,107,53,.5), rgba(124,58,237,.5));
+    border-radius: 6px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+    transition: all .3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255,107,53,.7), rgba(124,58,237,.7));
+    background-clip: content-box;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <img src="josh-talk-logo.png" alt="Josh Talks" class="logo-icon" style="width: 48px; height: 48px; object-fit: contain; border-radius: 12px;">
+    <div class="logo-text">
+      <h1>Hindi ASR Assignment</h1>
+      <p>Josh Talks · AI Research</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-badges">
+      <span class="badge">Whisper-small</span>
+      <span class="badge badge-alt">Hindi (hi_IN)</span>
+    </div>
+  </div>
+</header>
+
+<div class="tabs-wrapper">
+  <div class="tabs" role="tablist" aria-label="Assignment sections">
+    <button id="tab-q1" type="button" class="tab active" role="tab" aria-selected="true" aria-controls="q1" onclick="showTab('q1', this)">Q1 — Fine-tuning & Error Analysis</button>
+    <button id="tab-q2" type="button" class="tab" role="tab" aria-selected="false" aria-controls="q2" onclick="showTab('q2', this)">Q2 — Cleanup Pipeline</button>
+    <button id="tab-q3" type="button" class="tab" role="tab" aria-selected="false" aria-controls="q3" onclick="showTab('q3', this)">Q3 — Spell Checking</button>
+    <button id="tab-q4" type="button" class="tab" role="tab" aria-selected="false" aria-controls="q4" onclick="showTab('q4', this)">Q4 — Lattice WER</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- Q1 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div id="q1" class="section active" role="tabpanel" aria-labelledby="tab-q1">
+  <div class="section-header">
+    <div class="q-number">01</div>
+    <div class="q-meta">
+      <h2>Hindi ASR Fine-tuning with Whisper-small</h2>
+      <p>Preprocessing, fine-tuning on ~10h Josh Talks Hindi data, FLEURS evaluation, error taxonomy and targeted fixes.</p>
+    </div>
+  </div>
+
+  <!-- 1a: Preprocessing -->
+  <div class="card">
+    <div class="card-title">1a — Preprocessing Pipeline</div>
+    <div class="grid-3" style="margin-bottom:20px">
+      <div class="stat-tile">
+        <div class="stat-value" style="color:var(--accent)">~10h</div>
+        <div class="stat-label">Raw audio input</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value" style="color:var(--accent3)">16 kHz</div>
+        <div class="stat-label">Resampled (mono)</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value" style="color:#a78bfa">90/10</div>
+        <div class="stat-label">Train / Val split</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Download & Resample</h4>
+        <p>Async download of audio + transcription JSON from GCS. Resample all audio to 16 kHz mono using librosa. Clips &lt; 0.5 s or &gt; 30 s are discarded.</p>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Text Normalization</h4>
+        <p>Unicode NFC normalization → remove zero-width characters → strip non-Devanagari/non-ASCII characters → collapse whitespace → drop empty transcripts.</p>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>HuggingFace DatasetDict</h4>
+        <p>Saved as an Arrow dataset. Audio column cast to <code>Audio(sampling_rate=16000)</code>. Used with <code>Seq2SeqTrainer</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1b/c: WER Table -->
+  <div class="card">
+    <div class="card-title">1b/c — WER Comparison Table (FLEURS Hindi Test)</div>
+    <table class="wer-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>WER (%)</th>
+          <th>CER (%)</th>
+          <th>Median WER (%)</th>
+          <th>Visual</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Whisper-small (Baseline)</strong><br><small style="color:var(--muted)">openai/whisper-small, pretrained</small></td>
+          <td><strong id="q1-baseline-wer" style="color:var(--warn)">--</strong></td>
+          <td id="q1-baseline-cer">--</td>
+          <td id="q1-baseline-median">--</td>
+          <td><div class="wer-bar-wrap"><div id="q1-baseline-bar" class="wer-bar bad" style="width:0px"></div><span id="q1-baseline-vis" style="font-size:12px;color:var(--muted)">--</span></div></td>
+          <td><span class="badge badge-red">Baseline</span></td>
+        </tr>
+        <tr>
+          <td><strong>Whisper-small (Fine-tuned)</strong><br><small style="color:var(--muted)">2-phase training, encoder unfreezing</small></td>
+          <td><strong id="q1-finetuned-wer" style="color:var(--accent3)">--</strong></td>
+          <td id="q1-finetuned-cer">--</td>
+          <td id="q1-finetuned-median">--</td>
+          <td><div class="wer-bar-wrap"><div id="q1-finetuned-bar" class="wer-bar good" style="width:0px"></div><span id="q1-finetuned-vis" style="font-size:12px;color:var(--muted)">--</span></div></td>
+          <td><span class="badge badge-green">Fine-tuned</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:16px; padding:14px 16px; background:var(--surface2); border-radius:10px; font-size:13px; color:var(--muted)">
+      <strong id="q1-relative-reduction" style="color:var(--text)">Relative WER reduction: --</strong> — Fine-tuning on ~10h Hindi conversational data significantly reduces both WER and CER. Remaining errors analysed below.
+    </div>
+  </div>
+
+  <!-- 1d/e: Error Taxonomy -->
+  <div class="card">
+    <div id="q1-taxonomy-title" class="card-title">1d/e — Error Taxonomy (sampled utterances, stratified by severity)</div>
+
+    <div class="grid-3" style="margin-bottom:24px">
+      <div class="stat-tile"><div id="q1-sample-count" class="stat-value" style="color:var(--accent)">--</div><div class="stat-label">Utterances sampled</div></div>
+      <div class="stat-tile"><div id="q1-error-categories" class="stat-value" style="color:#a78bfa">--</div><div class="stat-label">Error categories</div></div>
+      <div class="stat-tile"><div class="stat-value" style="color:var(--accent3)">Stratified</div><div class="stat-label">Sampling strategy</div></div>
+    </div>
+
+    <div id="q1-sampling-strategy" style="margin-bottom:16px;font-size:13px;color:var(--muted)">
+      <strong style="color:var(--text)">Sampling strategy:</strong> Errors stratified into 4 WER bands — mild (5–25%), moderate (25–50%), severe (50–100%), complete (&gt;100%). Fixed quota per band: 6 mild · 8 moderate · 7 severe · 4 complete. No cherry-picking; random.seed(42) within each stratum.
+    </div>
+
+    <!-- Taxonomy accordion -->
+    <div class="taxonomy-item open">
+      <button type="button" class="taxonomy-header" onclick="toggleTaxonomy(this.closest('.taxonomy-item'))" aria-expanded="true">
+        <div class="taxonomy-name">#1 — Phonetic Substitution</div>
+        <div class="taxonomy-count">
+          <div style="font-size:12px;color:var(--muted)">38% of edits</div>
+          <div class="count-pill">47</div>
+          <div class="chevron">▼</div>
+        </div>
+      </button>
+      <div class="taxonomy-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Acoustically similar syllables/phonemes that are visually distinct but phonetically close — e.g., ट/त, ड/द, ब/व pairs.</p>
+        <div class="example-row"><div class="ex-label">Example 1</div><div class="ex-ref">बताया</div><div class="ex-hyp">पताया</div></div>
+        <div class="example-row"><div class="ex-label">Example 2</div><div class="ex-ref">मिलना</div><div class="ex-hyp">मिलता</div></div>
+        <div class="example-row"><div class="ex-label">Example 3</div><div class="ex-ref">करना</div><div class="ex-hyp">कहना</div></div>
+        <div class="example-row"><div class="ex-label">Example 4</div><div class="ex-ref">दिन</div><div class="ex-hyp">दिल</div></div>
+        <div style="margin-top:12px;font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Cause:</strong> Fast conversational speech blurs aspirated/unaspirated stop distinctions. Model lacks phoneme-level contrastive training data.</div>
+      </div>
+    </div>
+
+    <div class="taxonomy-item">
+      <button type="button" class="taxonomy-header" onclick="toggleTaxonomy(this.closest('.taxonomy-item'))" aria-expanded="false">
+        <div class="taxonomy-name">#2 — OOV / Transliteration Errors</div>
+        <div class="taxonomy-count">
+          <div style="font-size:12px;color:var(--muted)">22% of edits</div>
+          <div class="count-pill">27</div>
+          <div class="chevron">▼</div>
+        </div>
+      </button>
+      <div class="taxonomy-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">English loanwords in Devanagari that are outside the model's token vocabulary. Model falls back to phonetic guesses.</p>
+        <div class="example-row"><div class="ex-label">Example 1</div><div class="ex-ref">इंटरव्यू</div><div class="ex-hyp">इंटव्यू</div></div>
+        <div class="example-row"><div class="ex-label">Example 2</div><div class="ex-ref">कंप्यूटर</div><div class="ex-hyp">कंप्यटर</div></div>
+        <div class="example-row"><div class="ex-label">Example 3</div><div class="ex-ref">व्हाट्सएप</div><div class="ex-hyp">व्हाट्स</div></div>
+        <div style="margin-top:12px;font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Cause:</strong> Custom Devanagari spellings of English words are not in Whisper's Hindi vocabulary. Token fragmentation causes partial transcriptions.</div>
+      </div>
+    </div>
+
+    <div class="taxonomy-item">
+      <button type="button" class="taxonomy-header" onclick="toggleTaxonomy(this.closest('.taxonomy-item'))" aria-expanded="false">
+        <div class="taxonomy-name">#3 — Function Word Deletion</div>
+        <div class="taxonomy-count">
+          <div style="font-size:12px;color:var(--muted)">18% of edits</div>
+          <div class="count-pill">22</div>
+          <div class="chevron">▼</div>
+        </div>
+      </button>
+      <div class="taxonomy-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Short Hindi postpositions and particles (को, के, ने, से, में, ही) dropped in fast speech.</p>
+        <div class="example-row"><div class="ex-label">Example 1</div><div class="ex-ref">उसने काम किया</div><div class="ex-hyp">उस काम किया</div></div>
+        <div class="example-row"><div class="ex-label">Example 2</div><div class="ex-ref">घर में था</div><div class="ex-hyp">घर था</div></div>
+        <div class="example-row"><div class="ex-label">Example 3</div><div class="ex-ref">मुझको बताओ</div><div class="ex-hyp">मुझ बताओ</div></div>
+        <div style="margin-top:12px;font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Cause:</strong> Particles are acoustically weak and short. High-frequency tokens get low cross-entropy loss weight, so the model doesn't learn to attend to them reliably.</div>
+      </div>
+    </div>
+
+    <div class="taxonomy-item">
+      <button type="button" class="taxonomy-header" onclick="toggleTaxonomy(this.closest('.taxonomy-item'))" aria-expanded="false">
+        <div class="taxonomy-name">#4 — Numeral Confusion</div>
+        <div class="taxonomy-count">
+          <div style="font-size:12px;color:var(--muted)">12% of edits</div>
+          <div class="count-pill">15</div>
+          <div class="chevron">▼</div>
+        </div>
+      </button>
+      <div class="taxonomy-body">
+        <div class="example-row"><div class="ex-label">Example 1</div><div class="ex-ref">चौदह</div><div class="ex-hyp">14</div></div>
+        <div class="example-row"><div class="ex-label">Example 2</div><div class="ex-ref">पच्चीस</div><div class="ex-hyp">25</div></div>
+        <div class="example-row"><div class="ex-label">Example 3</div><div class="ex-ref">100</div><div class="ex-hyp">सौ</div></div>
+        <div style="margin-top:12px;font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Cause:</strong> Training data has inconsistent number formats. Some transcribers write digits, others write words. Model inherits this inconsistency.</div>
+      </div>
+    </div>
+
+    <div class="taxonomy-item">
+      <button type="button" class="taxonomy-header" onclick="toggleTaxonomy(this.closest('.taxonomy-item'))" aria-expanded="false">
+        <div class="taxonomy-name">#5 — Hallucinated Insertions</div>
+        <div class="taxonomy-count">
+          <div style="font-size:12px;color:var(--muted)">6% of edits</div>
+          <div class="count-pill">8</div>
+          <div class="chevron">▼</div>
+        </div>
+      </button>
+      <div class="taxonomy-body">
+        <div class="example-row"><div class="ex-label">Example 1</div><div class="ex-ref">देखो</div><div class="ex-hyp">अब देखो</div></div>
+        <div class="example-row"><div class="ex-label">Example 2</div><div class="ex-ref">मैंने सोचा</div><div class="ex-hyp">मैंने तो सोचा</div></div>
+        <div style="margin-top:12px;font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Cause:</strong> Decoder language model prior overrides acoustic evidence in low-SNR regions. Model "fills in" plausible filler words.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1f: Fixes -->
+  <div class="card">
+    <div class="card-title">1f — Proposed Fixes for Top-3 Error Types</div>
+
+    <div class="fix-card">
+      <h4>Fix 1: SpecAugment + Pitch-shift Augmentation → Phonetic Substitution</h4>
+      <ol>
+        <li>Apply SpecAugment (time mask + freq mask) to all training samples</li>
+        <li>Add pitch-shift augmentation ±2 semitones to create acoustic diversity</li>
+        <li>Create minimal-pair training samples for confused phoneme pairs (ट/त, ड/द)</li>
+        <li>Add phoneme-level CTC auxiliary loss head on the encoder output</li>
+      </ol>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">Expected impact: 10–20% relative reduction in phonetic substitution errors.</div>
+    </div>
+
+    <div class="fix-card" style="border-color:var(--accent2)">
+      <h4 style="color:#a78bfa">Fix 2: Custom Vocabulary Injection → OOV / Transliteration</h4>
+      <ol>
+        <li>Build bilingual loanword lexicon (top 500 English words → standard Devanagari spellings)</li>
+        <li>Inject tokens via <code>tokenizer.add_tokens()</code> + resize model embeddings</li>
+        <li>Use WFST-constrained beam search to bias towards valid Devanagari spellings</li>
+        <li>Fine-tune a separate transliteration post-correction model (IndicBERT)</li>
+      </ol>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">Expected impact: Near-elimination of OOV errors for known loanwords.</div>
+    </div>
+
+    <div class="fix-card" style="border-color:var(--accent3)">
+      <h4 style="color:var(--accent3)">Fix 3: Token-level Loss Weighting + LM Fusion → Function Word Deletion</h4>
+      <ol>
+        <li>Compute per-token frequency; assign inverse-frequency loss weights in Seq2SeqTrainer</li>
+        <li>Build Hindi n-gram / IndicBERT LM; apply shallow fusion during beam search</li>
+        <li>Add grammar-check post-processing step (IndicNLP) to reinsert deleted particles</li>
+      </ol>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">Expected impact: 15–25% relative reduction in deletion errors.</div>
+    </div>
+  </div>
+
+  <!-- 1g: Before/After -->
+  <div class="card">
+    <div class="card-title">1g — Fix Implementation: Before / After Results</div>
+    <p id="q1-fix-name" style="font-size:13px;color:var(--muted);margin-bottom:20px">Fix implementation loading from live report...</p>
+    <div class="grid-3">
+      <div class="stat-tile">
+        <div id="q1-fix-before" class="stat-value" style="color:var(--warn)">--</div>
+        <div class="stat-label">Before (subset WER)</div>
+      </div>
+      <div class="stat-tile">
+        <div id="q1-fix-after" class="stat-value" style="color:var(--accent3)">--</div>
+        <div class="stat-label">After post-correction</div>
+      </div>
+      <div class="stat-tile">
+        <div id="q1-fix-delta" class="stat-value" style="color:var(--accent)">--</div>
+        <div class="stat-label">Δ WER (absolute)</div>
+      </div>
+    </div>
+    <div id="q1-fix-note" style="margin-top:16px;font-size:13px;color:var(--muted)">Loading live fix summary...</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- Q2 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div id="q2" class="section" role="tabpanel" aria-labelledby="tab-q2">
+  <div class="section-header">
+    <div class="q-number">02</div>
+    <div class="q-meta">
+      <h2>ASR Cleanup Pipeline</h2>
+      <p>Number normalization and English word detection on raw Whisper-small ASR output.</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- 2a: Number Normalization -->
+    <div>
+      <div class="card">
+        <div class="card-title">2a — Number Normalization</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Greedy left-to-right span detection. Multiplier-aware parsing. Idiom guard prevents conversion of fixed phrases.</p>
+
+        <div style="margin-bottom:12px;font-size:13px;font-weight:700">✓ Correct conversions</div>
+        <div id="q2-converted-examples" class="code-block">Loading live Q2 conversion examples...</div>
+
+        <div style="margin-top:20px;margin-bottom:12px;font-size:13px;font-weight:700">⚠ Edge cases — judgment calls</div>
+        <div id="q2-edge-examples" class="code-block">Loading live Q2 edge-case examples...</div>
+      </div>
+    </div>
+
+    <!-- 2b: English Detection -->
+    <div>
+      <div class="card">
+        <div class="card-title">2b — English Word Detection</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Two-pass detection: Roman script tokens flagged directly; Devanagari transliterations matched against loanword lexicon. Per transcription guideline: Devanagari transliterations are <em>correct</em> spellings.</p>
+
+        <div style="margin-bottom:12px;font-size:13px;font-weight:700">Tagged examples</div>
+        <div id="q2-tagged-examples" class="code-block">Loading live Q2 English-tagging examples...</div>
+
+        <div style="margin-top:20px">
+          <div class="stat-tile">
+            <div id="q2-lexicon-size" class="stat-value" style="color:var(--accent);font-size:24px">--</div>
+            <div class="stat-label">Loanword lexicon (English → Devanagari)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- Q3 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div id="q3" class="section" role="tabpanel" aria-labelledby="tab-q3">
+  <div class="section-header">
+    <div class="q-number">03</div>
+    <div class="q-meta">
+      <h2>Hindi Spelling Error Detection</h2>
+      <p>Classify ~177,000 unique words as correctly/incorrectly spelled. Confidence scoring and systematic analysis of failure modes.</p>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:24px">
+    <div class="stat-tile">
+      <div id="q3-total-words" class="stat-value" style="color:var(--accent)">--</div>
+      <div class="stat-label">Unique words in dataset</div>
+    </div>
+    <div class="stat-tile">
+      <div id="q3-correct-count" class="stat-value" style="color:var(--accent3)">--</div>
+      <div class="stat-label">Classified correct</div>
+    </div>
+    <div class="stat-tile">
+      <div id="q3-incorrect-count" class="stat-value" style="color:var(--danger)">--</div>
+      <div class="stat-label">Classified incorrect</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Approach — 4 Combined Signals</div>
+    <div class="pipeline-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Devanagari Character Validity</h4>
+        <p>Reject any word containing non-Devanagari characters (Latin, stray Unicode). Lone virāma without preceding consonant → invalid. High confidence on rejection.</p>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>English Loanword Whitelist</h4>
+        <p>Words in ENGLISH_IN_DEVANAGARI lexicon (कंप्यूटर, इंटरव्यू, …) → correct spelling, high confidence. Per transcription guideline.</p>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Dictionary Lookup</h4>
+        <p>Match against IndicNLP / TDIL Hindi word list. Exact match → high confidence correct.</p>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Morphological Stemming</h4>
+        <p>Strip known Hindi inflectional suffixes (verb forms, plural markers, adjective agreement). If stem matches → medium confidence correct.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Sample Output (40 low-confidence words reviewed)</div>
+    <div style="margin-bottom:16px;font-size:13px;color:var(--muted)">
+      <span id="q3-review-summary">Loading live low-confidence review stats...</span>
+    </div>
+    <table class="spell-table">
+      <thead>
+        <tr><th>Word</th><th>Label</th><th>Confidence</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="hi">है</td><td class="correct">correct</td><td><span class="conf-pill conf-high">high</span></td><td>Exact dictionary match</td></tr>
+        <tr><td class="hi">कंप्यूटर</td><td class="correct">correct</td><td><span class="conf-pill conf-high">high</span></td><td>Known English loanword (Devanagari)</td></tr>
+        <tr><td class="hi">बताया</td><td class="correct">correct</td><td><span class="conf-pill conf-high">high</span></td><td>Exact dictionary match</td></tr>
+        <tr><td class="hi">इंटरव्यू</td><td class="correct">correct</td><td><span class="conf-pill conf-high">high</span></td><td>Known English loanword (Devanagari)</td></tr>
+        <tr><td class="hi">महाविद्यालय</td><td class="correct">correct</td><td><span class="conf-pill conf-medium">medium</span></td><td>Compound word; stem 'विद्यालय' found</td></tr>
+        <tr><td class="hi">लखनऊ</td><td class="incorrect">incorrect*</td><td><span class="conf-pill conf-low">low</span></td><td>No dict/stem match. <em>Actual: proper noun (city name) — system failure</em></td></tr>
+        <tr><td class="hi">काहे</td><td class="incorrect">incorrect*</td><td><span class="conf-pill conf-low">low</span></td><td>No dict/stem match. <em>Actual: Bhojpuri dialectal word — system failure</em></td></tr>
+        <tr><td class="hi">accha</td><td class="incorrect">incorrect</td><td><span class="conf-pill conf-high">high</span></td><td>Non-Devanagari characters detected</td></tr>
+        <tr><td class="hi">ठीkk</td><td class="incorrect">incorrect</td><td><span class="conf-pill conf-high">high</span></td><td>Non-Devanagari characters detected</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted)">* = system incorrect classification (false negative on proper noun / dialectal word)</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Unreliable Categories</div>
+    <div class="fix-card">
+      <h4>1. Named Entities (Proper Nouns)</h4>
+      <div style="font-size:13px;color:var(--muted)">People's names (Mohan, Priya), cities (Lucknow, Noida), brands — absent from dictionaries. System marks them low-confidence incorrect. Fix: integrate Hindi NER model and whitelist detected entities.</div>
+    </div>
+    <div class="fix-card" style="border-color:var(--accent2)">
+      <h4 style="color:#a78bfa">2. Long-tail Devanagari Loanwords</h4>
+      <div style="font-size:13px;color:var(--muted)">Rare technical terms, brand names transliterated to Devanagari (beyond our 500-word lexicon). Fix: continuously expand loanword lexicon from the dataset's own vocabulary using frequency analysis.</div>
+    </div>
+    <div class="fix-card" style="border-color:var(--accent3)">
+      <h4 style="color:var(--accent3)">3. Dialectal and Archaic Words</h4>
+      <div style="font-size:13px;color:var(--muted)">Bhojpuri, Awadhi, Urdu borrowings absent from standard Hindi dictionaries. Fix: add dialectal word lists from CDAC / ILCI Indic corpora.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- Q4 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div id="q4" class="section" role="tabpanel" aria-labelledby="tab-q4">
+  <div class="section-header">
+    <div class="q-number">04</div>
+    <div class="q-meta">
+      <h2>Lattice-Based WER Evaluation</h2>
+      <p>Replace a flat reference string with a lattice of valid alternatives. Compute lattice WER to avoid penalising models for valid transcription variants.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Design Choices</div>
+    <div class="grid-3">
+      <div class="stat-tile">
+        <div class="stat-value" style="font-size:22px;color:var(--accent)">WORD</div>
+        <div class="stat-label">Alignment unit</div>
+      </div>
+      <div class="stat-tile">
+        <div id="q4-threshold" class="stat-value" style="color:#a78bfa">--</div>
+        <div class="stat-label">Agreement threshold</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value" style="color:var(--accent3)">Additive</div>
+        <div class="stat-label">Lattice construction</div>
+      </div>
+    </div>
+    <div style="margin-top:20px;font-size:13px;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--text)">Why word-level?</strong> Whisper operates at word level; character-level mixes phonetic and orthographic errors; phrase-level makes insertions/deletions hard to localise. Word-level is the standard ASR evaluation unit.<br><br>
+      <strong style="color:var(--text)">Additive lattice:</strong> We never remove the reference from a bin. We only ADD alternatives. This ensures the lattice is strictly more permissive than the reference — if the model matches the reference, its WER is unchanged.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Example: उसने चौदह किताबें खरीदीं</div>
+    <div style="margin-bottom:20px;font-size:13px;color:var(--muted)">Reference: He bought 14 books. Five model outputs with valid alternatives.</div>
+
+    <div class="lattice-wrap">
+      <div class="lattice-svg-container">
+        <svg viewBox="0 0 780 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 Z" fill="#2a2a3f"/>
+            </marker>
+          </defs>
+
+          <!-- Bins -->
+          <g>
+            <!-- Bin 1 -->
+            <rect x="20"  y="60" width="150" height="80" rx="10" fill="#1c1c28" stroke="#2a2a3f" stroke-width="1.5"/>
+            <text x="95"  y="85"  text-anchor="middle" fill="#7c3aed" font-family="Space Mono" font-size="10" font-weight="700">BIN 1</text>
+            <text x="95"  y="105" text-anchor="middle" fill="#e8e8f0" font-family="Space Mono" font-size="11">उसने</text>
+            <text x="95"  y="125" text-anchor="middle" fill="#7a7a9a" font-family="Space Mono" font-size="9">1 variant</text>
+
+            <!-- Bin 2 -->
+            <rect x="200" y="40" width="150" height="120" rx="10" fill="#1c1c28" stroke="#2a2a3f" stroke-width="1.5"/>
+            <text x="275" y="65"  text-anchor="middle" fill="#7c3aed" font-family="Space Mono" font-size="10" font-weight="700">BIN 2</text>
+            <text x="275" y="85"  text-anchor="middle" fill="#e8e8f0" font-family="Space Mono" font-size="11">चौदह</text>
+            <text x="275" y="103" text-anchor="middle" fill="#10b981" font-family="Space Mono" font-size="11">14</text>
+            <text x="275" y="121" text-anchor="middle" fill="#10b981" font-family="Space Mono" font-size="11">१४</text>
+            <text x="275" y="145" text-anchor="middle" fill="#7a7a9a" font-family="Space Mono" font-size="9">3 variants</text>
+
+            <!-- Bin 3 -->
+            <rect x="380" y="30" width="150" height="140" rx="10" fill="#1c1c28" stroke="#2a2a3f" stroke-width="1.5"/>
+            <text x="455" y="55"  text-anchor="middle" fill="#7c3aed" font-family="Space Mono" font-size="10" font-weight="700">BIN 3</text>
+            <text x="455" y="75"  text-anchor="middle" fill="#e8e8f0" font-family="Space Mono" font-size="11">किताबें</text>
+            <text x="455" y="93"  text-anchor="middle" fill="#10b981" font-family="Space Mono" font-size="11">किताबे</text>
+            <text x="455" y="111" text-anchor="middle" fill="#10b981" font-family="Space Mono" font-size="11">पुस्तकें</text>
+            <text x="455" y="129" text-anchor="middle" fill="#10b981" font-family="Space Mono" font-size="10">pustakein</text>
+            <text x="455" y="155" text-anchor="middle" fill="#7a7a9a" font-family="Space Mono" font-size="9">4 variants</text>
+
+            <!-- Bin 4 -->
+            <rect x="560" y="55" width="150" height="90" rx="10" fill="#1c1c28" stroke="#2a2a3f" stroke-width="1.5"/>
+            <text x="635" y="80"  text-anchor="middle" fill="#7c3aed" font-family="Space Mono" font-size="10" font-weight="700">BIN 4</text>
+            <text x="635" y="100" text-anchor="middle" fill="#e8e8f0" font-family="Space Mono" font-size="11">खरीदीं</text>
+            <text x="635" y="118" text-anchor="middle" fill="#10b981" font-family="Space Mono" font-size="11">खरीदी</text>
+            <text x="635" y="135" text-anchor="middle" fill="#7a7a9a" font-family="Space Mono" font-size="9">2 variants</text>
+          </g>
+
+          <!-- Arrows -->
+          <line x1="170" y1="100" x2="196" y2="100" stroke="#2a2a3f" stroke-width="2" marker-end="url(#arr)"/>
+          <line x1="350" y1="100" x2="376" y2="100" stroke="#2a2a3f" stroke-width="2" marker-end="url(#arr)"/>
+          <line x1="530" y1="100" x2="556" y2="100" stroke="#2a2a3f" stroke-width="2" marker-end="url(#arr)"/>
+
+          <!-- Legend -->
+          <rect x="20" y="175" width="12" height="12" rx="3" fill="#e8e8f0"/>
+          <text x="36" y="186" fill="#7a7a9a" font-family="DM Sans" font-size="11">Reference</text>
+          <rect x="110" y="175" width="12" height="12" rx="3" fill="#10b981"/>
+          <text x="126" y="186" fill="#7a7a9a" font-family="DM Sans" font-size="11">Model-agreed alternative</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- WER comparison table -->
+  <div class="card">
+    <div class="card-title">Standard WER vs Lattice WER</div>
+    <table class="wer-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Hypothesis</th>
+          <th>Std WER (%)</th>
+          <th>Lattice WER (%)</th>
+          <th>Δ WER</th>
+          <th>Unfairly penalised?</th>
+        </tr>
+      </thead>
+      <tbody id="q4-results-body"></tbody>
+    </table>
+    <div id="q4-summary" style="margin-top:16px;padding:14px 16px;background:var(--surface2);border-radius:10px;font-size:13px;color:var(--muted)">
+      Loading live lattice-WER summary...
+    </div>
+  </div>
+
+  <!-- Algorithm card -->
+  <div class="card">
+    <div class="card-title">Pseudocode — Lattice Construction + Lattice WER</div>
+    <div class="code-block" style="font-size:11.5px;line-height:2">
+<span style="color:#a78bfa">ALGORITHM</span> BUILD_LATTICE(reference R, hypotheses H, threshold K):
+  lattice ← [LatticeBin({r_j} ∪ known_alts(r_j)) <span style="color:var(--muted)">for</span> r_j <span style="color:var(--muted)">in</span> R]
+
+  <span style="color:var(--muted)">for</span> each model m <span style="color:var(--muted)">in</span> H:
+    alignment ← word_levenshtein(R, H[m])
+    <span style="color:var(--muted)">for</span> (op, ref_pos, hyp_pos) <span style="color:var(--muted)">in</span> alignment:
+      <span style="color:var(--muted)">if</span> op <span style="color:var(--muted)">in</span> {equal, substitute}: votes[ref_pos][H[m][hyp_pos]] += 1
+      <span style="color:var(--muted)">elif</span> op == insert:   insertions[(before, after)][word] += 1
+
+  <span style="color:var(--muted)">// Model agreement override</span>
+  <span style="color:var(--muted)">for</span> pos, votes[pos]:
+    <span style="color:var(--muted)">if</span> count >= K: lattice[pos].add(word)  <span style="color:var(--muted)">// additive, never removes reference</span>
+
+<span style="color:#a78bfa">ALGORITHM</span> LATTICE_EDIT_DISTANCE(hyp, lattice):
+  dp[0..len(hyp)][0..len(lattice)] ← ∞
+  dp[0][0] ← 0; dp[i][0] ← i; dp[0][j] ← j
+
+  <span style="color:var(--muted)">for</span> i, j:
+    match_cost ← 0 <span style="color:var(--muted)">if</span> lattice[j].accepts(hyp[i]) <span style="color:var(--muted)">else</span> 1
+    dp[i][j] ← min(dp[i-1][j-1]+match_cost, dp[i-1][j]+1, dp[i][j-1]+1)
+
+  <span style="color:var(--muted)">return</span> dp[len(hyp)][len(lattice)]
+
+<span style="color:#a78bfa">LATTICE_WER</span>(hyp, lattice, reference) =
+  LATTICE_EDIT_DISTANCE(hyp, lattice) / len(reference)
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div>Josh Talks · AI Researcher Intern Assignment · Hindi ASR</div>
+  <div style="display:flex;gap:12px">
+    <span class="badge badge-orange">Whisper-small</span>
+    <span class="badge badge-purple">FLEURS hi_IN</span>
+    <span id="footer-live-wer" class="badge badge-green">WER --</span>
+  </div>
+</footer>
+
+<script>
+  const meterWidth = (value) => {
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return 0;
+    return Math.max(0, Math.min(150, Math.round(numeric * 2)));
+  };
+
+  function fmtPct(value) {
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return '--';
+    return `${numeric.toFixed(1)}%`;
+  }
+
+  async function fetchJson(url) {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${url} -> ${response.status}`);
+    return response.json();
+  }
+
+  function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function renderQ1(report) {
+    if (!report || !Array.isArray(report.results)) {
+      setText('q1-relative-reduction', 'Relative WER reduction: pending Q1 artifact generation');
+      setText('q1-sample-count', 'N/A');
+      setText('q1-error-categories', 'N/A');
+      setText('q1-fix-note', 'Q1 report not found. Run q1_whisper_finetune.py with manifest.json to generate artifacts/q1/report.json.');
+      return;
+    }
+    const baseline = report.results[0] || {};
+    const finetuned = report.results[1] || {};
+
+    setText('q1-baseline-wer', fmtPct(baseline.wer));
+    setText('q1-finetuned-wer', fmtPct(finetuned.wer));
+    setText('q1-baseline-cer', fmtPct(baseline.cer));
+    setText('q1-finetuned-cer', fmtPct(finetuned.cer));
+    setText('q1-baseline-median', fmtPct(baseline.median_wer));
+    setText('q1-finetuned-median', fmtPct(finetuned.median_wer));
+    setText('q1-baseline-vis', fmtPct(baseline.wer));
+    setText('q1-finetuned-vis', fmtPct(finetuned.wer));
+
+    const baselineBar = document.getElementById('q1-baseline-bar');
+    const finetunedBar = document.getElementById('q1-finetuned-bar');
+    if (baselineBar) baselineBar.style.width = `${meterWidth(baseline.wer)}px`;
+    if (finetunedBar) finetunedBar.style.width = `${meterWidth(finetuned.wer)}px`;
+
+    if (finetuned.relative_reduction_pct !== undefined) {
+      const reduction = Number(finetuned.relative_reduction_pct);
+      setText('q1-relative-reduction', `Relative WER reduction: ${reduction.toFixed(1)} %`);
+      setText('footer-live-wer', `WER -${reduction.toFixed(1)}%`);
+    }
+
+    if (report.sampling) {
+      setText('q1-sample-count', report.sampling.total_error_samples ?? '--');
+      const categoryCount = report.error_taxonomy?.total_error_categories ?? '--';
+      setText('q1-error-categories', categoryCount);
+      const titleNode = document.getElementById('q1-taxonomy-title');
+      if (titleNode) {
+        const totalSamples = report.sampling.total_error_samples ?? '--';
+        titleNode.textContent = `1d/e — Error Taxonomy (${totalSamples} sampled utterances, stratified by severity)`;
+      }
+      if (report.sampling.strategy) {
+        const strategyNode = document.getElementById('q1-sampling-strategy');
+        if (strategyNode) {
+          strategyNode.innerHTML = `<strong style="color:var(--text)">Sampling strategy:</strong> ${report.sampling.strategy}`;
+        }
+      }
+    }
+
+    if (report.implemented_fix) {
+      setText('q1-fix-name', `${report.implemented_fix.name || 'Implemented fix'} applied on targeted subset from sampled errors.`);
+      const fixResults = report.implemented_fix.results || report.implemented_fix;
+      setText('q1-fix-before', fmtPct(fixResults.wer_before));
+      setText('q1-fix-after', fmtPct(fixResults.wer_after));
+      const delta = Number(fixResults.delta_pp);
+      setText('q1-fix-delta', Number.isNaN(delta) ? '--' : `${delta.toFixed(2)}%`);
+      setText('q1-fix-note', `Target subset size: ${report.implemented_fix.target_subset_size ?? '--'} utterances.`);
+    }
+  }
+
+  function renderQ2(report) {
+    if (!report) {
+      setText('q2-lexicon-size', 'N/A');
+      const convNode = document.getElementById('q2-converted-examples');
+      const edgeNode = document.getElementById('q2-edge-examples');
+      const tagNode = document.getElementById('q2-tagged-examples');
+      if (convNode) convNode.textContent = 'Q2 report missing. Generate artifacts/q2/report.json.';
+      if (edgeNode) edgeNode.textContent = 'Q2 report missing. Generate artifacts/q2/report.json.';
+      if (tagNode) tagNode.textContent = 'Q2 report missing. Generate artifacts/q2/report.json.';
+      return;
+    }
+    const convNode = document.getElementById('q2-converted-examples');
+    const edgeNode = document.getElementById('q2-edge-examples');
+    const tagNode = document.getElementById('q2-tagged-examples');
+
+    if (convNode && report.number_normalization?.converted_examples) {
+      convNode.innerHTML = report.number_normalization.converted_examples
+        .map(item => `<span class="hi">${item.input}</span>\n  <span class="arrow">→</span> <span class="hi">${item.output}</span>`)
+        .join('\n\n') || 'No conversion examples available yet.';
+    }
+
+    if (edgeNode && report.number_normalization?.edge_case_examples) {
+      edgeNode.innerHTML = report.number_normalization.edge_case_examples
+        .map(item => `<span class="hi">${item.input}</span>\n  <span class="arrow">→</span> <span class="hi">${item.output}</span>\n  <span style="color:var(--muted)">// ${item.note || 'Edge case'}</span>`)
+        .join('\n\n') || 'No edge-case examples available yet.';
+    }
+
+    if (tagNode && report.english_detection?.tagged_examples) {
+      tagNode.innerHTML = report.english_detection.tagged_examples
+        .map(item => `<span style="color:var(--muted)">Input:</span>  <span class="hi">${item.text}</span>\n<span style="color:var(--muted)">Detected:</span> <span class="en-word">${(item.detected || []).join(', ')}</span>\n<span style="color:var(--muted)">  EN: ${(item.detected || []).join(', ')}</span>`)
+        .join('\n\n') || 'No tagged examples available yet.';
+    }
+
+    if (report.english_detection?.loanword_lexicon_size !== undefined) {
+      setText('q2-lexicon-size', report.english_detection.loanword_lexicon_size);
+    }
+  }
+
+  function renderQ3(report) {
+    if (!report) {
+      setText('q3-total-words', 'N/A');
+      setText('q3-correct-count', 'N/A');
+      setText('q3-incorrect-count', 'N/A');
+      setText('q3-review-summary', 'Q3 report missing. Generate artifacts/q3/report.json.');
+      return;
+    }
+    setText('q3-total-words', report.total_words ?? '--');
+    setText('q3-correct-count', report.correct_spelling_count ?? '--');
+    setText('q3-incorrect-count', report.incorrect_spelling_count ?? '--');
+
+    const review = report.low_confidence_review;
+    if (review) {
+      const summary = review.reviewed_count
+        ? `Of ${review.reviewed_count} low-confidence words reviewed manually: ${review.correctly_classified} correct, ${review.misclassified} incorrect. System accuracy = ${review.accuracy_pct}% on the low-confidence bucket.`
+        : `Low-confidence bucket size: ${report.low_confidence_count}. ${review.note || ''}`;
+      setText('q3-review-summary', summary);
+    }
+  }
+
+  function renderQ4(report) {
+    if (!report) {
+      setText('q4-threshold', 'N/A');
+      const body = document.getElementById('q4-results-body');
+      if (body) body.innerHTML = '<tr><td colspan="6">Q4 report missing. Generate artifacts/q4/report.json.</td></tr>';
+      setText('q4-summary', 'Q4 report missing. Generate artifacts/q4/report.json.');
+      return;
+    }
+    if (report.trust_threshold !== undefined) {
+      setText('q4-threshold', `≥ ${(Number(report.trust_threshold) * 100).toFixed(0)}%`);
+    }
+
+    const body = document.getElementById('q4-results-body');
+    if (!body || !report.results) return;
+
+    const rows = Object.entries(report.results).map(([name, value]) => {
+      const std = Number(value.standard_wer);
+      const lat = Number(value.lattice_wer);
+      const delta = std - lat;
+      const improved = value.improved ? '<span class="badge badge-orange">✓ Yes</span>' : '<span class="badge badge-red">No</span>';
+      return `
+        <tr>
+          <td><strong>${name}</strong></td>
+          <td style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)">${(report.models && report.models[name]) || '-'}</td>
+          <td style="color:var(--warn)">${std.toFixed(1)}</td>
+          <td style="color:var(--accent3)">${lat.toFixed(1)}</td>
+          <td style="color:var(--accent3)">-${delta.toFixed(1)}</td>
+          <td>${improved}</td>
+        </tr>`;
+    }).join('');
+
+    body.innerHTML = rows || '<tr><td colspan="6">No live Q4 results available.</td></tr>';
+
+    const improvedCount = Object.values(report.results).filter(r => r.improved).length;
+    setText('q4-summary', `${improvedCount} model(s) improved under lattice WER with trust-threshold ${report.trust_threshold}.`);
+  }
+
+  async function loadLiveReports() {
+    try {
+      const [status, q1, q2, q3, q4] = await Promise.all([
+        fetchJson('/api/report-status').catch(() => null),
+        fetchJson('/api/wer-table').catch(() => null),
+        fetchJson('/api/q2-report').catch(() => null),
+        fetchJson('/api/q3-report').catch(() => null),
+        fetchJson('/api/q4-report').catch(() => null),
+      ]);
+
+      const health = document.getElementById('report-health');
+      if (health && status && status.available) {
+        const parts = Object.entries(status.available)
+          .map(([name, ok]) => `${name.replace('_report', '').toUpperCase()}:${ok ? '✓' : '✗'}`)
+          .join(' · ');
+        health.textContent = `Report status: ${parts}`;
+      } else if (health) {
+        health.textContent = 'Report status: unavailable';
+      }
+
+      renderQ1(q1);
+      renderQ2(q2);
+      renderQ3(q3);
+      renderQ4(q4);
+    } catch (err) {
+      console.error('Failed to load live reports', err);
+    }
+  }
+
+  function showTab(id, tabEl) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+    });
+    document.getElementById(id).classList.add('active');
+    if (tabEl) {
+      tabEl.classList.add('active');
+      tabEl.setAttribute('aria-selected', 'true');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleTaxonomy(el) {
+    el.classList.toggle('open');
+    const header = el.querySelector('.taxonomy-header');
+    if (header) header.setAttribute('aria-expanded', el.classList.contains('open') ? 'true' : 'false');
+  }
+
+  loadLiveReports();
+</script>
+</body>
+</html>

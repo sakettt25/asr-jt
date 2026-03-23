@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "C:\Users\KIIT0001\Downloads\josh-talks-asr-assignment-main\josh-talks-asr-assignment-main\q1_whisper_finetune.py", line 25, in <module>
+    import evaluate
+ModuleNotFoundError: No module named 'evaluate'
