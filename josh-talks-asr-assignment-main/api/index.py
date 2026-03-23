@@ -66,3 +66,6 @@ def report_status():
         "q3": os.path.exists(os.path.join(ARTIFACTS_DIR, "q3", "report.json")),
         "q4": os.path.exists(os.path.join(ARTIFACTS_DIR, "q4", "report.json")),
     }), 200, {'Content-Type': 'application/json'}
+
+if __name__ == '__main__':
+    app.run(debug=False)
