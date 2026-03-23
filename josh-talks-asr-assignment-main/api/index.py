@@ -1,132 +1,68 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
+from flask import Flask
 import json
-import sys
 import os
-import traceback
+import sys
 
-# Add parent dir to path so we can import our modules
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, parent_dir)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
+ARTIFACTS_DIR = os.path.join(BASE_DIR, "artifacts")
 
-# Initialize Flask app
-app = Flask(__name__, static_folder=parent_dir, static_url_path='')
-CORS(app)
+app = Flask(__name__)
 
-# Configure artifacts directory
-ARTIFACTS_DIR = os.path.join(parent_dir, "artifacts")
-
-# Try to import dependencies
-try:
-    from q2_cleanup_pipeline import ASRCleanupPipeline, EnglishWordDetector
-    from q3_spell_checker import HindiSpellChecker
-    from q4_lattice_wer import LatticeBuilder, LatticeWERComputer
-    HAS_DEPS = True
-except ImportError as e:
-    print(f"Warning: Dependencies not available: {e}")
-    HAS_DEPS = False
-    traceback.print_exc()
-
-
-def _read_json(path: str):
-    """Read JSON file safely"""
+def read_json(path):
     try:
-        if not os.path.exists(path):
-            return None
-        with open(path, "r", encoding="utf-8") as handle:
-            import json
-            import sys
-            import os
+        if os.path.exists(path):
+            with open(path) as f:
+                return json.load(f)
+    except:
+        pass
+    return None
 
-            # Add parent dir to path
-            parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            sys.path.insert(0, parent_dir)
+@app.route('/', methods=['GET'])
+def index():
+    html = os.path.join(BASE_DIR, 'dashboard.html')
+    if os.path.exists(html):
+        with open(html) as f:
+            return f.read(), 200, {'Content-Type': 'text/html'}
+    return json.dumps({"status": "ok"}), 200, {'Content-Type': 'application/json'}
 
-            ARTIFACTS_DIR = os.path.join(parent_dir, "artifacts")
-            def _read_json(path):
-                if not os.path.exists(path):
-                    return None
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        return json.load(f)
-                except:
-                    return None
-            def handler(request):
-                path = request.path
-    
-                # Root
-                if path in ('/', ''):
-                    dashboard_path = os.path.join(parent_dir, 'dashboard.html')
-                    if os.path.exists(dashboard_path):
-                        with open(dashboard_path, 'r', encoding='utf-8') as f:
-                            return {
-                                "statusCode": 200,
-                                "headers": {"Content-Type": "text/html; charset=utf-8"},
-                                "body": f.read(),
-                            }
-                    return {
-                        "statusCode": 200,
-                        "headers": {"Content-Type": "application/json"},
-                        "body": json.dumps({"status": "OK", "message": "Josh Talks ASR API"}),
-                    }
-                # Health check
-                if path == '/api/health':
-                    return {
-                        "statusCode": 200,
-                        "headers": {"Content-Type": "application/json"},
-                        "body": json.dumps({"status": "ok", "message": "API running"}),
-                    }
-    
-                # Report endpoints
-                if path == '/api/wer-table':
-                    report = _read_json(os.path.join(ARTIFACTS_DIR, "q1", "report.json"))
-                    return {
-                        "statusCode": 200 if report else 404,
-                        "headers": {"Content-Type": "application/json"},
-                        "body": json.dumps(report or {"error": "Not found"}),
-                    }
-    
-                if path == '/api/report-status':
-                    return {
-                        "statusCode": 200,
-                        "headers": {"Content-Type": "application/json"},
-                        "body": json.dumps({
-                            "available": {
-                                "q1": os.path.exists(os.path.join(ARTIFACTS_DIR, "q1", "report.json")),
-                                "q2": os.path.exists(os.path.join(ARTIFACTS_DIR, "q2", "report.json")),
-                                "q3": os.path.exists(os.path.join(ARTIFACTS_DIR, "q3", "report.json")),
-                                "q4": os.path.exists(os.path.join(ARTIFACTS_DIR, "q4", "report.json")),
-                            }
-                        }),
-                    }
-    
-                if path == '/api/q2-report':
-                    report = _read_json(os.path.join(ARTIFACTS_DIR, "q2", "report.json"))
-                    return {
-                        "statusCode": 200 if report else 404,
-                        "headers": {"Content-Type": "application/json"},
-                        "body": json.dumps(report or {"error": "Not found"}),
-                    }
-    
-                if path == '/api/q3-report':
-                    report = _read_json(os.path.join(ARTIFACTS_DIR, "q3", "report.json"))
-                    return {
-                        "statusCode": 200 if report else 404,
-                        "headers": {"Content-Type": "application/json"},
-                        "body": json.dumps(report or {"error": "Not found"}),
-                    }
-    
-                if path == '/api/q4-report':
-                    report = _read_json(os.path.join(ARTIFACTS_DIR, "q4", "report.json"))
-                    return {
-                        "statusCode": 200 if report else 404,
-                        "headers": {"Content-Type": "application/json"},
-                        "body": json.dumps(report or {"error": "Not found"}),
-                    }
-                # 404
-                return {
-                    "statusCode": 404,
-                    "headers": {"Content-Type": "application/json"},
-                    "body": json.dumps({"error": "Not found", "path": path}),
-                }
-def spell_check_endpoint():
+@app.route('/api/health', methods=['GET'])
+def health():
+    return json.dumps({"status": "ok"}), 200, {'Content-Type': 'application/json'}
+
+@app.route('/api/wer-table', methods=['GET'])
+def wer_table():
+    data = read_json(os.path.join(ARTIFACTS_DIR, "q1", "report.json"))
+    if data:
+        return json.dumps(data), 200, {'Content-Type': 'application/json'}
+    return json.dumps({"error": "not found"}), 404, {'Content-Type': 'application/json'}
+
+@app.route('/api/q2-report', methods=['GET'])
+def q2_report():
+    data = read_json(os.path.join(ARTIFACTS_DIR, "q2", "report.json"))
+    if data:
+        return json.dumps(data), 200, {'Content-Type': 'application/json'}
+    return json.dumps({"error": "not found"}), 404, {'Content-Type': 'application/json'}
+
+@app.route('/api/q3-report', methods=['GET'])
+def q3_report():
+    data = read_json(os.path.join(ARTIFACTS_DIR, "q3", "report.json"))
+    if data:
+        return json.dumps(data), 200, {'Content-Type': 'application/json'}
+    return json.dumps({"error": "not found"}), 404, {'Content-Type': 'application/json'}
+
+@app.route('/api/q4-report', methods=['GET'])
+def q4_report():
+    data = read_json(os.path.join(ARTIFACTS_DIR, "q4", "report.json"))
+    if data:
+        return json.dumps(data), 200, {'Content-Type': 'application/json'}
+    return json.dumps({"error": "not found"}), 404, {'Content-Type': 'application/json'}
+
+@app.route('/api/report-status', methods=['GET'])
+def report_status():
+    return json.dumps({
+        "q1": os.path.exists(os.path.join(ARTIFACTS_DIR, "q1", "report.json")),
+        "q2": os.path.exists(os.path.join(ARTIFACTS_DIR, "q2", "report.json")),
+        "q3": os.path.exists(os.path.join(ARTIFACTS_DIR, "q3", "report.json")),
+        "q4": os.path.exists(os.path.join(ARTIFACTS_DIR, "q4", "report.json")),
+    }), 200, {'Content-Type': 'application/json'}
