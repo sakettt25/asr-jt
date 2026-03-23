@@ -2,12 +2,8 @@
   "version": 2,
   "builds": [
     {
-      "src": "requirements.txt",
-      "use": "@vercel/python@latest"
-    },
-    {
       "src": "api/index.py",
-      "use": "@vercel/python@latest"
+      "use": "@vercel/python"
     }
   ],
   "routes": [
