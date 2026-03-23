@@ -1,14 +1,13 @@
 {
   "version": 2,
-  "buildCommand": "pip install -r requirements.txt",
   "builds": [
     {
+      "src": "requirements.txt",
+      "use": "@vercel/python@latest"
+    },
+    {
       "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb",
-        "runtime": "python3.11"
-      }
+      "use": "@vercel/python@latest"
     }
   ],
   "routes": [
@@ -16,8 +15,5 @@
       "src": "/(.*)",
       "dest": "api/index.py"
     }
-  ],
-  "env": {
-    "PYTHONUNBUFFERED": "1"
-  }
+  ]
 }

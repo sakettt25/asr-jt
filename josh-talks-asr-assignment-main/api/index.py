@@ -1,291 +1,232 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import json, sys, os
+import json
+import sys
+import os
 import traceback
 
 # Add parent dir to path so we can import our modules
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parent_dir)
 
-try:
-    from q2_cleanup_pipeline import ASRCleanupPipeline, HindiNumberNormalizer, EnglishWordDetector
-    from q3_spell_checker import HindiSpellChecker, Verdict, Confidence
-    from q4_lattice_wer import LatticeBuilder, LatticeWERComputer, get_spelling_variants
-except ImportError as e:
-    # Handle missing dependencies gracefully
-    print(f"Warning: Could not import dependencies: {e}")
-    traceback.print_exc()
-
-app = Flask(__name__)
+# Initialize Flask app
+app = Flask(__name__, static_folder=parent_dir, static_url_path='')
 CORS(app)
 
+# Configure artifacts directory
 ARTIFACTS_DIR = os.path.join(parent_dir, "artifacts")
+
+# Try to import dependencies
+try:
+    from q2_cleanup_pipeline import ASRCleanupPipeline, EnglishWordDetector
+    from q3_spell_checker import HindiSpellChecker
+    from q4_lattice_wer import LatticeBuilder, LatticeWERComputer
+    HAS_DEPS = True
+except ImportError as e:
+    print(f"Warning: Dependencies not available: {e}")
+    HAS_DEPS = False
+    traceback.print_exc()
 
 
 def _read_json(path: str):
-    if not os.path.exists(path):
-        return None
-    with open(path, "r", encoding="utf-8") as handle:
-        return json.load(handle)
-
-
-# ─────────────────────────────────────────────────────────────
-# STATIC SERVING
-# ─────────────────────────────────────────────────────────────
-
-@app.route("/")
-def index():
-    html_path = os.path.join(parent_dir, "dashboard.html")
-    if os.path.exists(html_path):
-        return send_from_directory(parent_dir, "dashboard.html")
-    return jsonify({"message": "Josh Talks ASR Assignment - Dashboard"}), 200
-
-
-@app.route("/dashboard")
-def dashboard():
-    html_path = os.path.join(parent_dir, "dashboard.html")
-    if os.path.exists(html_path):
-        return send_from_directory(parent_dir, "dashboard.html")
-    return jsonify({"message": "Dashboard"}), 200
-
-
-@app.route("/<path:filename>")
-def serve_static(filename):
-    """Serve static assets (images, CSS, JS, etc.)"""
+    """Read JSON file safely"""
     try:
-        return send_from_directory(parent_dir, filename)
+        if not os.path.exists(path):
+            return None
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
     except Exception as e:
-        return jsonify({"error": f"File not found: {filename}"}), 404
-
-
-# Lazy load singletons to handle missing dependencies
-pipeline = None
-spell_check = None
-lat_builder = None
-lat_wer = None
-
-def get_pipeline():
-    global pipeline
-    if pipeline is None:
-        try:
-            pipeline = ASRCleanupPipeline()
-        except Exception as e:
-            print(f"Error initializing pipeline: {e}")
-    return pipeline
-
-def get_spell_check():
-    global spell_check
-    if spell_check is None:
-        try:
-            spell_check = HindiSpellChecker()
-        except Exception as e:
-            print(f"Error initializing spell checker: {e}")
-    return spell_check
-
-def get_lat_builder():
-    global lat_builder
-    if lat_builder is None:
-        try:
-            lat_builder = LatticeBuilder()
-        except Exception as e:
-            print(f"Error initializing lattice builder: {e}")
-    return lat_builder
-
-def get_lat_wer():
-    global lat_wer
-    if lat_wer is None:
-        try:
-            lat_wer = LatticeWERComputer()
-        except Exception as e:
-            print(f"Error initializing lattice WER: {e}")
-    return lat_wer
+        print(f"Error reading {path}: {e}")
+        return None
 
 
 # ─────────────────────────────────────────────────────────────
-# HEALTH CHECK
+# ROOT ROUTES
 # ─────────────────────────────────────────────────────────────
 
-@app.route("/api/health")
+@app.route('/')
+def root():
+    """Serve dashboard.html"""
+    dashboard_path = os.path.join(parent_dir, 'dashboard.html')
+    if os.path.exists(dashboard_path):
+        with open(dashboard_path, 'r', encoding='utf-8') as f:
+            return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
+    return jsonify({
+        "message": "Josh Talks ASR Assignment API",
+        "status": "running",
+        "endpoints": {
+            "health": "/api/health",
+            "normalize": "/api/normalize",
+            "detect-english": "/api/detect-english",
+            "spell-check": "/api/spell-check",
+            "lattice-wer": "/api/lattice-wer",
+            "wer-table": "/api/wer-table",
+            "report-status": "/api/report-status"
+        }
+    }), 200
+
+
+# ─────────────────────────────────────────────────────────────
+# API ROUTES
+# ─────────────────────────────────────────────────────────────
+
+@app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok", "message": "Josh Talks ASR Demo API is running"}), 200
+    """Health check endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Josh Talks ASR Demo API is running",
+        "has_dependencies": HAS_DEPS,
+        "artifacts_dir": ARTIFACTS_DIR
+    }), 200
 
 
-# ─────────────────────────────────────────────────────────────
-# Q2 — NUMBER NORMALIZATION
-# ─────────────────────────────────────────────────────────────
-
-@app.route("/api/normalize", methods=["POST"])
+@app.route('/api/normalize', methods=['POST'])
 def normalize():
-    """
-    POST { "text": "तीन सौ चौवन लोग आए" }
-    → { "original": "...", "normalized": "354 लोग आए" }
-    """
+    """Q2 - Number normalization endpoint"""
     try:
-        data     = request.get_json(force=True)
-        text     = data.get("text", "").strip()
+        if not HAS_DEPS:
+            return jsonify({"error": "Dependencies not available"}), 503
+            
+        data = request.get_json(force=True)
+        text = data.get("text", "").strip()
         if not text:
             return jsonify({"error": "text is required"}), 400
 
-        pipeline_instance = get_pipeline()
-        if pipeline_instance is None:
-            return jsonify({"error": "Pipeline not available"}), 500
-            
-        result   = pipeline_instance.process(text)
+        pipeline = ASRCleanupPipeline()
+        result = pipeline.process(text)
         return jsonify({
-            "original":   result.original,
+            "original": result.original,
             "normalized": result.normalized,
-            "tagged":     result.tagged,
+            "tagged": result.tagged,
             "english_words": result.english_words,
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-# ─────────────────────────────────────────────────────────────
-# Q2 — ENGLISH WORD DETECTION
-# ─────────────────────────────────────────────────────────────
-
-@app.route("/api/detect-english", methods=["POST"])
+@app.route('/api/detect-english', methods=['POST'])
 def detect_english():
-    """
-    POST { "text": "मेरा interview कल है" }
-    → { "tagged": "मेरा [EN]interview[/EN] कल है", "english_words": ["interview"] }
-    """
+    """Q2 - English word detection endpoint"""
     try:
-        data  = request.get_json(force=True)
-        text  = data.get("text", "").strip()
+        if not HAS_DEPS:
+            return jsonify({"error": "Dependencies not available"}), 503
+            
+        data = request.get_json(force=True)
+        text = data.get("text", "").strip()
         if not text:
             return jsonify({"error": "text is required"}), 400
 
         detector = EnglishWordDetector()
         tagged, eng_words = detector.detect(text)
-        return jsonify({"original": text, "tagged": tagged, "english_words": eng_words}), 200
+        return jsonify({
+            "original": text,
+            "tagged": tagged,
+            "english_words": eng_words
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-# ─────────────────────────────────────────────────────────────
-# Q3 — SPELL CHECKER
-# ─────────────────────────────────────────────────────────────
-
-@app.route("/api/spell-check", methods=["POST"])
+@app.route('/api/spell-check', methods=['POST'])
 def spell_check_endpoint():
-    """
-    POST { "words": ["नमस्ते", "भारत्", "computर"] }
-    → { "results": [{ word, verdict, confidence, reason }, ...] }
-    """
+    """Q3 - Spell checker endpoint"""
     try:
-        data  = request.get_json(force=True)
+        if not HAS_DEPS:
+            return jsonify({"error": "Dependencies not available"}), 503
+            
+        data = request.get_json(force=True)
         words = data.get("words", [])
         if not words:
             return jsonify({"error": "words array is required"}), 400
 
-        spell_check_instance = get_spell_check()
-        if spell_check_instance is None:
-            return jsonify({"error": "Spell checker not available"}), 500
-
+        spell_check = HindiSpellChecker()
         results = []
-        for word in words[:500]:   # cap at 500 per request
-            r = spell_check_instance.classify(word)
+        for word in words[:500]:
+            r = spell_check.classify(word)
             results.append({
-                "word":       r.word,
-                "verdict":    r.verdict.value,
+                "word": r.word,
+                "verdict": r.verdict.value,
                 "confidence": r.confidence.value,
-                "reason":     r.reason,
+                "reason": r.reason,
             })
 
-        correct_count   = sum(1 for r in results if r["verdict"] == "correct spelling")
+        correct_count = sum(1 for r in results if r["verdict"] == "correct spelling")
         incorrect_count = len(results) - correct_count
 
         return jsonify({
-            "results":         results,
-            "total":           len(results),
-            "correct_count":   correct_count,
+            "results": results,
+            "total": len(results),
+            "correct_count": correct_count,
             "incorrect_count": incorrect_count,
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-# ─────────────────────────────────────────────────────────────
-# Q4 — LATTICE WER
-# ─────────────────────────────────────────────────────────────
-
-@app.route("/api/lattice-wer", methods=["POST"])
+@app.route('/api/lattice-wer', methods=['POST'])
 def lattice_wer_endpoint():
-    """
-    POST {
-      "reference": "उसने चौदह किताबें खरीदीं",
-      "models": {
-        "Model_A": "उसने चौदह किताबें खरीदीं",
-        "Model_B": "उसने 14 किताबें खरीदी"
-      }
-    }
-    """
+    """Q4 - Lattice WER endpoint"""
     try:
-        data      = request.get_json(force=True)
+        if not HAS_DEPS:
+            return jsonify({"error": "Dependencies not available"}), 503
+            
+        data = request.get_json(force=True)
         reference = data.get("reference", "").strip()
-        models    = data.get("models", {})
+        models = data.get("models", {})
 
         if not reference or not models:
             return jsonify({"error": "reference and models are required"}), 400
 
-        lat_builder_instance = get_lat_builder()
-        lat_wer_instance = get_lat_wer()
-        
-        if lat_builder_instance is None or lat_wer_instance is None:
-            return jsonify({"error": "Lattice WER not available"}), 500
+        lat_builder = LatticeBuilder()
+        lat_wer = LatticeWERComputer()
 
-        try:
-            lattice = lat_builder_instance.build(reference, models)
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
+        lattice = lat_builder.build(reference, models)
         lattice_data = [{"position": b.position, "variants": sorted(b.variants)}
                         for b in lattice]
 
         wer_results = {}
         for name, hyp in models.items():
-            std_wer = lat_wer_instance.compute_standard_wer(reference, hyp)
-            lat_res = lat_wer_instance.compute(lattice, hyp)
+            std_wer = lat_wer.compute_standard_wer(reference, hyp)
+            lat_res = lat_wer.compute(lattice, hyp)
             wer_results[name] = {
-                "standard_wer":  std_wer,
-                "lattice_wer":   lat_res["wer"],
+                "standard_wer": std_wer,
+                "lattice_wer": lat_res["wer"],
                 "substitutions": lat_res["substitutions"],
-                "deletions":     lat_res["deletions"],
-                "insertions":    lat_res["insertions"],
-                "improved":      lat_res["wer"] < std_wer,
+                "deletions": lat_res["deletions"],
+                "insertions": lat_res["insertions"],
+                "improved": lat_res["wer"] < std_wer,
             }
 
         return jsonify({
-            "reference":    reference,
-            "lattice":      lattice_data,
-            "wer_results":  wer_results,
+            "reference": reference,
+            "lattice": lattice_data,
+            "wer_results": wer_results,
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
 # ─────────────────────────────────────────────────────────────
-# Q1 — WER TABLE (static results from training run)
+# REPORT ENDPOINTS
 # ─────────────────────────────────────────────────────────────
 
-@app.route("/api/wer-table")
+@app.route('/api/wer-table', methods=['GET'])
 def wer_table():
-    """Returns live Q1 evaluation results from artifacts/q1/report.json."""
+    """Q1 - WER table from artifacts"""
     report_path = os.path.join(ARTIFACTS_DIR, "q1", "report.json")
     report = _read_json(report_path)
     if report is None:
         return jsonify({
             "error": "Q1 report artifact not found",
             "expected_path": report_path,
-            "hint": "Run q1_whisper_finetune.py with a valid manifest to generate live metrics."
         }), 404
     return jsonify(report), 200
 
 
-@app.route("/api/report-status")
+@app.route('/api/report-status', methods=['GET'])
 def report_status():
+    """Check which reports are available"""
     paths = {
         "q1_report": os.path.join(ARTIFACTS_DIR, "q1", "report.json"),
         "q2_report": os.path.join(ARTIFACTS_DIR, "q2", "report.json"),
@@ -299,56 +240,78 @@ def report_status():
     }), 200
 
 
-@app.route("/api/q2-report")
+@app.route('/api/q2-report', methods=['GET'])
 def q2_report():
+    """Q2 - Report from artifacts"""
     report_path = os.path.join(ARTIFACTS_DIR, "q2", "report.json")
     report = _read_json(report_path)
     if report is None:
         return jsonify({
             "error": "Q2 report artifact not found",
             "expected_path": report_path,
-            "hint": "Generate raw ASR pairs and run build_q2_live_report()."
         }), 404
     return jsonify(report), 200
 
 
-@app.route("/api/q3-report")
+@app.route('/api/q3-report', methods=['GET'])
 def q3_report():
+    """Q3 - Report from artifacts"""
     report_path = os.path.join(ARTIFACTS_DIR, "q3", "report.json")
     report = _read_json(report_path)
     if report is None:
         return jsonify({
             "error": "Q3 report artifact not found",
             "expected_path": report_path,
-            "hint": "Run spell check export and build_q3_live_report()."
         }), 404
     return jsonify(report), 200
 
 
-@app.route("/api/q4-report")
+@app.route('/api/q4-report', methods=['GET'])
 def q4_report():
+    """Q4 - Report from artifacts"""
     report_path = os.path.join(ARTIFACTS_DIR, "q4", "report.json")
     report = _read_json(report_path)
     if report is None:
         return jsonify({
             "error": "Q4 report artifact not found",
             "expected_path": report_path,
-            "hint": "Run q4_lattice_wer.py or build_q4_live_report() with model outputs input."
         }), 404
     return jsonify(report), 200
 
 
-# Error handler
+# ─────────────────────────────────────────────────────────────
+# ERROR HANDLERS
+# ─────────────────────────────────────────────────────────────
+
 @app.errorhandler(404)
 def not_found(e):
-    return jsonify({"error": "Route not found", "path": request.path}), 404
+    """404 error handler"""
+    return jsonify({
+        "error": "Not found",
+        "path": request.path,
+        "method": request.method
+    }), 404
 
 
 @app.errorhandler(405)
 def method_not_allowed(e):
-    return jsonify({"error": "Method not allowed", "method": request.method}), 405
+    """405 error handler"""
+    return jsonify({
+        "error": "Method not allowed",
+        "path": request.path,
+        "method": request.method
+    }), 405
+
+
+@app.errorhandler(500)
+def internal_error(e):
+    """500 error handler"""
+    return jsonify({
+        "error": "Internal server error",
+        "message": str(e)
+    }), 500
 
 
 # Export app for Vercel
-if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(debug=False, host='0.0.0.0', port=5000)
