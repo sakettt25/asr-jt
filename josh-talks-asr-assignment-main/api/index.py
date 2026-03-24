@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 import json
 import os
@@ -25,39 +25,39 @@ def index():
     try:
         html = os.path.join(BASE_DIR, "dashboard.html")
         if os.path.exists(html):
-            with open(html) as f:
-                return f.read(), 200
-        return json.dumps({"status": "ok"}), 200
+            with open(html, encoding="utf-8") as f:
+                return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
+        return jsonify({"status": "ok"}), 200
     except Exception as e:
-        return json.dumps({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/health", methods=["GET"])
 def health():
-    return json.dumps({"status": "ok"}), 200
+    return jsonify({"status": "ok"}), 200
 
 @app.route("/api/wer-table", methods=["GET"])
 def wer_table():
     data = read_json(os.path.join(ARTIFACTS_DIR, "q1", "report.json"))
-    return (json.dumps(data), 200) if data else (json.dumps({"error": "not found"}), 404)
+    return (jsonify(data), 200) if data else (jsonify({"error": "not found"}), 404)
 
 @app.route("/api/q2-report", methods=["GET"])
 def q2_report():
     data = read_json(os.path.join(ARTIFACTS_DIR, "q2", "report.json"))
-    return (json.dumps(data), 200) if data else (json.dumps({"error": "not found"}), 404)
+    return (jsonify(data), 200) if data else (jsonify({"error": "not found"}), 404)
 
 @app.route("/api/q3-report", methods=["GET"])
 def q3_report():
     data = read_json(os.path.join(ARTIFACTS_DIR, "q3", "report.json"))
-    return (json.dumps(data), 200) if data else (json.dumps({"error": "not found"}), 404)
+    return (jsonify(data), 200) if data else (jsonify({"error": "not found"}), 404)
 
 @app.route("/api/q4-report", methods=["GET"])
 def q4_report():
     data = read_json(os.path.join(ARTIFACTS_DIR, "q4", "report.json"))
-    return (json.dumps(data), 200) if data else (json.dumps({"error": "not found"}), 404)
+    return (jsonify(data), 200) if data else (jsonify({"error": "not found"}), 404)
 
 @app.route("/api/report-status", methods=["GET"])
 def report_status():
-    return json.dumps({
+    return jsonify({
         "q1": os.path.exists(os.path.join(ARTIFACTS_DIR, "q1", "report.json")),
         "q2": os.path.exists(os.path.join(ARTIFACTS_DIR, "q2", "report.json")),
         "q3": os.path.exists(os.path.join(ARTIFACTS_DIR, "q3", "report.json")),
