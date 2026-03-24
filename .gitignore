@@ -74,3 +74,7 @@ josh-talks-asr-assignment-main/artifacts/q2_generate_log.txt
 josh-talks-asr-assignment-main/artifacts/final_crosscheck.txt
 josh-talks-asr-assignment-main/artifacts/submission_check_output.txt
 josh-talks-asr-assignment-main/artifacts/submission_check_output_utf8.txt
+
+# Non-essential helper docs
+josh-talks-asr-assignment-main/SUBMISSION_READY.md
+josh-talks-asr-assignment-main/SUBMISSION_CHECKLIST.md
