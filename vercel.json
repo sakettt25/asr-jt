@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "functions": {
+    "josh-talks-asr-assignment-main/api/index.py": {
+      "runtime": "python3.11"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/josh-talks-asr-assignment-main/api/index.py"
+    }
+  ]
+}
