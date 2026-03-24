@@ -60,3 +60,17 @@ submission_artifacts/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Temporary remediation/debug files
+q1_execution*.log
+josh-talks-asr-assignment-main/final_remediation.py
+josh-talks-asr-assignment-main/run_q2_generate.py
+josh-talks-asr-assignment-main/artifacts/env_check.txt
+josh-talks-asr-assignment-main/artifacts/pkg_check.txt
+josh-talks-asr-assignment-main/artifacts/pkg_check_after_install.txt
+josh-talks-asr-assignment-main/artifacts/pip_install_log.txt
+josh-talks-asr-assignment-main/artifacts/pip_show.txt
+josh-talks-asr-assignment-main/artifacts/q2_generate_log.txt
+josh-talks-asr-assignment-main/artifacts/final_crosscheck.txt
+josh-talks-asr-assignment-main/artifacts/submission_check_output.txt
+josh-talks-asr-assignment-main/artifacts/submission_check_output_utf8.txt
