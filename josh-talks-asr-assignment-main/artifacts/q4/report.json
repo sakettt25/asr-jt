@@ -1,0 +1,142 @@
+{
+  "source": "Assignment Task sheet (aggregate)",
+  "n_utterances": 46,
+  "reference": "वही अपना खेती बाड़ी और क्या",
+  "models": {
+    "Model H": "वही अपना खेती बाड़ी और क्या",
+    "Model i": "वही अपना खेती बाड़ी और क्या",
+    "Model k": "वही अपना खेती बाड़ी और क्या?",
+    "Model l": "वही अपना खेती बाड़ी और क्या",
+    "Model m": "वही अपना खेतीबाड़ी और क्या",
+    "Model n": "वही अपना खेती बाड़ी और क्या"
+  },
+  "alignment_unit": "word",
+  "trust_threshold": 0.6,
+  "pseudocode": {
+    "description": "Corrected Lattice Construction & Lattice WER Algorithms",
+    "data_structures": {
+      "LatticeBin": "Set of word alternatives at position j {word1, word2, ...}",
+      "Lattice": "Array[0..len(reference)] → LatticeBin (words allowed at each position)",
+      "VoteTable": "votes[ref_pos][word] → count (number of models voting for word at ref_pos)"
+    },
+    "algorithm_build_lattice": [
+      "FUNCTION BUILD_LATTICE(reference R, hypotheses H[1..m], threshold K):",
+      "  // Initialize lattice with reference words",
+      "  lattice ← [ {R[j]} for j in 0..len(R)-1 ]",
+      "  votes ← [ {} for j in 0..len(R)-1 ]  // votes[pos][word] = count",
+      "  insertions ← {}  // insertions[(pos_before, pos_after)][word] = count",
+      "",
+      "  // Collect votes from each model hypothesis",
+      "  FOR each model m IN H[1..m]:",
+      "    alignment ← ALIGN_WORDS(R, H[m])  // word-level alignment (e.g., Levenshtein)",
+      "    FOR each (operation, ref_pos, hyp_word) IN alignment:",
+      "      IF operation == 'equal':",
+      "        votes[ref_pos][H[m][ref_pos]] += 1",
+      "      ELSE IF operation == 'substitute':",
+      "        votes[ref_pos][hyp_word] += 1",
+      "      ELSE IF operation == 'insert':",
+      "        insertions[(ref_pos, ref_pos)] [hyp_word] += 1",
+      "      ELSE IF operation == 'delete':",
+      "        // Skip: deletion means word not in this model, no vote added",
+      "        CONTINUE",
+      "",
+      "  // Build lattice: add words with sufficient model agreement",
+      "  FOR pos IN 0..len(R)-1:",
+      "    FOR word, count IN votes[pos].items():",
+      "      IF count >= K * m:  // K is fraction threshold (e.g., 0.6)",
+      "        lattice[pos].add(word)  // never removes reference",
+      "",
+      "  // Note: Insertions typically handled as separate lattice positions",
+      "  // or integrated into latticebin with special markers.",
+      "",
+      "  RETURN lattice"
+    ],
+    "algorithm_lattice_edit_distance": [
+      "FUNCTION LATTICE_EDIT_DISTANCE(hypothesis hyp, lattice):",
+      "  m ← len(hyp)",
+      "  n ← len(lattice)",
+      "  dp ← [ [∞ for j in 0..n] for i in 0..m ]",
+      "",
+      "  // Base cases",
+      "  dp[0][0] ← 0",
+      "  FOR i IN 1..m:",
+      "    dp[i][0] ← i  // i deletions from hyp",
+      "  FOR j IN 1..n:",
+      "    dp[0][j] ← j  // j insertions to match lattice",
+      "",
+      "  // DP recurrence",
+      "  FOR i IN 1..m:",
+      "    FOR j IN 1..n:",
+      "      match_cost ← 0 IF lattice[j-1].contains(hyp[i-1]) ELSE 1",
+      "      dp[i][j] ← MIN(",
+      "        dp[i-1][j-1] + match_cost,  // match/substitute",
+      "        dp[i-1][j] + 1,             // deletion from hyp",
+      "        dp[i][j-1] + 1              // insertion into hyp",
+      "      )",
+      "",
+      "  RETURN dp[m][n]"
+    ],
+    "algorithm_lattice_wer": [
+      "FUNCTION LATTICE_WER(hypothesis hyp, lattice, reference):",
+      "  edit_distance ← LATTICE_EDIT_DISTANCE(hyp, lattice)",
+      "  wer ← (edit_distance / len(reference)) * 100",
+      "  RETURN wer"
+    ],
+    "key_clarifications": {
+      "voting_threshold": "K = trust_threshold (e.g., 0.6), minimum fraction of models that must agree",
+      "lattice_structure": "Each lattice[j] is a SET of acceptable words at reference position j (reference word always included)",
+      "alignment": "Word-level alignment between reference and each hypothesis using edit distance",
+      "lattice_wer_benefit": "By allowing alternative words voted by multiple models, lattice WER typically lower than standard WER"
+    }
+  },
+  "results": {
+    "Model H": {
+      "standard_wer": 3.98,
+      "lattice_wer": 2.85,
+      "substitutions": null,
+      "deletions": null,
+      "insertions": null,
+      "improved": true
+    },
+    "Model i": {
+      "standard_wer": 6.7,
+      "lattice_wer": 2.79,
+      "substitutions": null,
+      "deletions": null,
+      "insertions": null,
+      "improved": true
+    },
+    "Model k": {
+      "standard_wer": 24.27,
+      "lattice_wer": 3.05,
+      "substitutions": null,
+      "deletions": null,
+      "insertions": null,
+      "improved": true
+    },
+    "Model l": {
+      "standard_wer": 11.32,
+      "lattice_wer": 3.44,
+      "substitutions": null,
+      "deletions": null,
+      "insertions": null,
+      "improved": true
+    },
+    "Model m": {
+      "standard_wer": 20.73,
+      "lattice_wer": 5.03,
+      "substitutions": null,
+      "deletions": null,
+      "insertions": null,
+      "improved": true
+    },
+    "Model n": {
+      "standard_wer": 11.39,
+      "lattice_wer": 3.16,
+      "substitutions": null,
+      "deletions": null,
+      "insertions": null,
+      "improved": true
+    }
+  }
+}

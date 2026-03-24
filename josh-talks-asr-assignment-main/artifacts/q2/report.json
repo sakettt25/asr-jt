@@ -1,0 +1,85 @@
+{
+  "n_pairs": 46,
+  "wer_summary": {
+    "before_wer": 3.3,
+    "after_wer": 4.52,
+    "delta": -1.22,
+    "n_samples": 46
+  },
+  "number_normalization": {
+    "converted_examples": [
+      {
+        "input": "एक सिंपल और सादा वे में",
+        "output": "1 सिंपल और सादा वे में"
+      },
+      {
+        "input": "जो एक महत्वपूर्ण भूमिका निभाते हैं",
+        "output": "जो 1 महत्वपूर्ण भूमिका निभाते हैं"
+      },
+      {
+        "input": "बंद हो जाता है तो इन सब से इन सब का एक ही उपाय होता है कई अन्य जगह पर घूमने जाना यात्रा करना प्रवन करना चाहे वो किसी भी रूप में हो चाहे किसी पर्यटन स्थल पर हो दर्शनीय स्थल पर हो किसी के",
+        "output": "बंद हो जाता है तो इन सब से इन सब का 1 ही उपाय होता है कई अन्य जगह पर घूमने जाना यात्रा करना प्रवन करना चाहे वो किसी भी रूप में हो चाहे किसी पर्यटन स्थल पर हो दर्शनीय स्थल पर हो किसी के"
+      },
+      {
+        "input": "एक दिन पहले या उसी दिन चतुर्थी के दिन लोग उसको लेकर आते हैं मूर्ति को थोड़ा सा फेस को जो चेहरा होता है ना गणेश जी का वो ढक कर और फिर उनको लेकर आते हैं बैंड बाजे के साथ में लेकर आते हैं",
+        "output": "1 दिन पहले या उसी दिन चतुर्थी के दिन लोग उसको लेकर आते हैं मूर्ति को थोड़ा सा फेस को जो चेहरा होता है ना गणेश जी का वो ढक कर और फिर उनको लेकर आते हैं बैंड बाजे के साथ में लेकर आते हैं"
+      },
+      {
+        "input": "और या फिर मुस्कुरा कर कहे दो कि हाँ नानी आप तो अगले महीने अब घर चल रही हैं मैं अब आपकी पसंदीदा खिचड़ी भी बनाऊँगी और मैंने यही मैंने बात टालने की ही कोशिश की मैंने दूसरा रास्ता चुना",
+        "output": "और या फिर मुस्कुरा कर कहे 2 कि हाँ नानी आप तो अगले महीने अब घर चल रही हैं मैं अब आपकी पसंदीदा खिचड़ी भी बनाऊँगी और मैंने यही मैंने बात टालने की ही कोशिश की मैंने दूसरा रास्ता चुना"
+      }
+    ],
+    "edge_case_examples": [
+      {
+        "input": "2020 से 2024 तक चार साल हुए",
+        "output": "2020 से 2024 तक चार साल हुए",
+        "note": "Years kept as-is; numeric sequences not normalized"
+      },
+      {
+        "input": "ISBN 978-81-7525-123-4 की किताब खरीदी",
+        "output": "ISBN 978-81-7525-123-4 की किताब खरीदी",
+        "note": "ISBN-style numbers unchanged; context-dependent"
+      },
+      {
+        "input": "रु 500 दे दो ना",
+        "output": "रु 500 दे दो ना",
+        "note": "Currency notation: digit preserved with unit context"
+      },
+      {
+        "input": "टेलीफोन नंबर 9876543210 हो गया",
+        "output": "टेलीफोन नंबर 9876543210 हो गया",
+        "note": "Phone numbers: kept as digits; word inflation risky"
+      }
+    ]
+  },
+  "english_detection": {
+    "tagged_examples": [
+      {
+        "text": "phone को मेज पर रखा है",
+        "detected": ["phone"],
+        "language": "hindi_english_mixed"
+      },
+      {
+        "text": "application में सभी features हैं",
+        "detected": ["application", "features"],
+        "language": "hindi_english_mixed"
+      },
+      {
+        "text": "software का use करना है",
+        "detected": ["software"],
+        "language": "hindi_english_mixed"
+      },
+      {
+        "text": "computer science का क्षेत्र बहुत बड़ा है",
+        "detected": ["computer", "science"],
+        "language": "hindi_english_mixed"
+      },
+      {
+        "text": "online mode में classes की जा रही हैं",
+        "detected": ["online", "mode", "classes"],
+        "language": "hindi_english_mixed"
+      }
+    ],
+    "loanword_lexicon_size": 27
+  }
+}

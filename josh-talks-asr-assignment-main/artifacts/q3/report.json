@@ -1,0 +1,15 @@
+{
+  "total_words": 177400,
+  "correct_spelling_count": 157949,
+  "incorrect_spelling_count": 19451,
+  "low_confidence_count": 71,
+  "results_csv": "spell_check_results.csv",
+  "low_confidence_sample_csv": "artifacts/q3/low_confidence_sample.csv",
+  "low_confidence_review": {
+    "reviewed_count": 0,
+    "correctly_classified": null,
+    "misclassified": null,
+    "accuracy_pct": null,
+    "note": "Add reviewed_csv with true_verdict labels to compute live review accuracy"
+  }
+}
