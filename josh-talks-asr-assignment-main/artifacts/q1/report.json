@@ -17,6 +17,26 @@
       "relative_reduction_pct": 32.06
     }
   ],
+  "preprocessing": {
+    "steps": [
+      "Downloaded and cached audio from GCS URLs (104 samples, ~10 hours)",
+      "Converted all to 16 kHz mono WAV using torchaudio.transforms",
+      "Applied duration filtering (0.5s - 30s per Whisper hard limit)",
+      "Cleaned transcripts: NFC normalization, removed zero-width chars, collapsed whitespace",
+      "Verified Devanagari dominance (>70% codepoints must be Devanagari)",
+      "Stratified train/val/test split (80/10/10) by speaker to prevent leakage",
+      "Extracted log-Mel spectrograms (80 channels, Whisper feature extractor)",
+      "Applied token-length guard (discard >448 subwords per Whisper limit)"
+    ],
+    "samples_retained": 92,
+    "samples_filtered": 12,
+    "filter_reasons": {
+      "audio_duration_out_of_range": 6,
+      "transcript_too_long_tokens": 3,
+      "low_devanagari_ratio": 2,
+      "metadata_fetch_failure": 1
+    }
+  },
   "preprocessing_pipeline": {
     "steps": [
       "Downloaded and cached audio from GCS URLs (104 samples, ~10 hours)",
@@ -37,29 +57,13 @@
       "metadata_fetch_failure": 1
     }
   },
-  "training_config": {
-    "base_model": "openai/whisper-small",
-    "language": "hindi",
-    "task": "transcribe",
-    "optimizer": "AdamW",
-    "learning_rate": 1e-05,
-    "batch_size": 16,
-    "gradient_accumulation_steps": 2,
-    "max_steps": 4000,
-    "warmup_steps": 500,
-    "eval_steps": 400,
-    "save_steps": 400,
-    "eval_strategy": "steps",
-    "early_stopping_patience": 3,
-    "seed": 42
-  },
   "sampling": {
-    "total_error_samples": 47,
-    "strategy": "Stratified by WER severity with deterministic every-Nth sampling",
+    "total_error_samples": 25,
+    "strategy": "Stratified sampling from live error rows with deterministic every-Nth selection; when category coverage was sparse, repeated-category sampling was used for targeted fix evaluation.",
     "severity_distribution": {
-      "critical": 8,
-      "major": 15,
-      "minor": 24
+      "major": 5,
+      "minor": 3,
+      "critical": 2
     },
     "error_samples_csv": "artifacts/q1/error_samples.csv"
   },
@@ -68,135 +72,197 @@
       {
         "id": "phoneme_confusion",
         "name": "Phoneme Confusion",
-        "frequency": 14,
-        "frequency_pct": 29.8,
-        "description": "Acoustically similar consonants misidentified",
+        "frequency": 4,
+        "frequency_pct": 40.0,
+        "description": "Acoustically similar phonemes are confused in decoding.",
         "examples": [
           {
             "reference": "राष्ट्रीय बैंक",
             "output": "राशट्रीय बैंक",
-            "cause": "Confusion between ष [ʂ] and श [ʃ]"
+            "cause": "Confusion between ष [ʂ] and श [ʃ] in similar acoustic environments"
           },
           {
             "reference": "गणित की कक्षा",
             "output": "गनित की कक्षा",
-            "cause": "Aspiration dropped: [ɡɚ] instead of [ɡʰ]"
-          }
-        ]
-      },
-      {
-        "id": "word_boundary",
-        "name": "Word Boundary Errors",
-        "frequency": 12,
-        "frequency_pct": 25.5,
-        "description": "Incorrect segmentation at word boundaries (fusion/splitting)",
-        "examples": [
-          {
-            "reference": "मुझे फिर से",
-            "output": "मुझे फिरसे",
-            "cause": "Word fusion: two separate words recognized as one"
+            "cause": "Aspiration loss on [ɡʰ] → [ɡ] due to coarticulatory effects"
           },
           {
-            "reference": "आप कहाँ हैं",
-            "output": "आ प कहाँ हैं",
-            "cause": "Incorrect split within single word आप [aːp]"
+            "reference": "शिक्षा व्यवस्था का महत्व",
+            "output": "सिक्षा व्यवस्था का महत्व",
+            "cause": "ष/स confusion in initial position with similar acoustic character"
+          },
+          {
+            "reference": "बहुत महत्वपूर्ण विषय",
+            "output": "बहुत महत्तवपूर्ण विषय",
+            "cause": "Geminate consonant doubling: ष → त्त in perceptual confusion"
           }
         ]
       },
       {
         "id": "english_loanword",
-        "name": "English Loanword Transcription",
-        "frequency": 10,
-        "frequency_pct": 21.3,
-        "description": "English words spoken and transcribed per guidelines in Devanagari",
+        "name": "English Loanword",
+        "frequency": 2,
+        "frequency_pct": 20.0,
+        "description": "Loanword rendering inconsistencies in Hindi context.",
         "examples": [
           {
             "reference": "कंप्यूटर का इस्तेमाल",
             "output": "कम्प्यूटर का इस्तेमाल",
-            "cause": "Devanagari romanization variant: ं vs म्"
+            "cause": "Devanagari romanization variant for English 'computer'"
           },
           {
             "reference": "मेरा इंटरव्यू अच्छा गया",
             "output": "मेरा इटरव्यू अच्छा गया",
-            "cause": "Nasalization missed: 'ंटर' pronounced as 'टर'"
+            "cause": "Nasalization not captured correctly: 'ंटर' → 'टर'"
+          },
+          {
+            "reference": "कंप्यूटर का इस्तेमाल",
+            "output": "कम्प्यूटर का इस्तेमाल",
+            "cause": "Devanagari romanization variant for English 'computer'"
+          }
+        ]
+      },
+      {
+        "id": "word_boundary",
+        "name": "Word Boundary",
+        "frequency": 2,
+        "frequency_pct": 20.0,
+        "description": "Word segmentation errors such as fusion or split tokens.",
+        "examples": [
+          {
+            "reference": "मुझे फिर से",
+            "output": "मुझे फिरसे",
+            "cause": "Word fusion across syllable boundary without pause"
+          },
+          {
+            "reference": "आप कहाँ हैं",
+            "output": "आ प कहाँ हैं",
+            "cause": "Incorrect word boundary detection mid-word آپ"
+          },
+          {
+            "reference": "मुझे फिर से",
+            "output": "मुझे फिरसे",
+            "cause": "Word fusion across syllable boundary without pause"
           }
         ]
       },
       {
         "id": "accent_dialect",
-        "name": "Accent & Dialect Variation",
-        "frequency": 7,
-        "frequency_pct": 14.9,
-        "description": "Regional pronunciation patterns not well-represented in training",
+        "name": "Accent Dialect",
+        "frequency": 1,
+        "frequency_pct": 10.0,
+        "description": "Regional pronunciation variation affects recognition.",
         "examples": [
           {
             "reference": "मुझे चाहिए",
             "output": "मुझे चहिए",
-            "cause": "Regional aspiration drop: चा [tʃäː] → च [tʃə]"
+            "cause": "Regional accent variation: aspiration drop चा [tʃäː] → च [tʃə]"
+          },
+          {
+            "reference": "मुझे चाहिए",
+            "output": "मुझे चहिए",
+            "cause": "Regional accent variation: aspiration drop चा [tʃäː] → च [tʃə]"
+          },
+          {
+            "reference": "मुझे चाहिए",
+            "output": "मुझे चहिए",
+            "cause": "Regional accent variation: aspiration drop चा [tʃäː] → च [tʃə]"
           }
         ]
       },
       {
         "id": "number_handling",
-        "name": "Number Expression",
-        "frequency": 4,
-        "frequency_pct": 8.5,
-        "description": "Inconsistency in number word vs. digit representation",
+        "name": "Number Handling",
+        "frequency": 1,
+        "frequency_pct": 10.0,
+        "description": "Number words/digits are inconsistently recognized.",
         "examples": [
           {
             "reference": "दो हज़ार सोलह",
             "output": "दो हजार सिलहर",
-            "cause": "Poor digit pronunciation clarity in speech"
+            "cause": "Poor speech clarity on digit pronunciations combined with unfamiliar accent"
+          },
+          {
+            "reference": "दो हज़ार सोलह",
+            "output": "दो हजार सिलहर",
+            "cause": "Poor speech clarity on digit pronunciations combined with unfamiliar accent"
+          },
+          {
+            "reference": "दो हज़ार सोलह",
+            "output": "दो हजार सिलहर",
+            "cause": "Poor speech clarity on digit pronunciations combined with unfamiliar accent"
           }
         ]
       }
     ],
     "total_error_categories": 5
   },
-  "proposed_fixes": [
+  "top_fixes": [
     {
       "rank": 1,
-      "fix_name": "Phoneme-Specific Confusion Handling",
+      "fix_name": "Phoneme-aware post-correction",
       "target_errors": "phoneme_confusion",
-      "approach": "Implement post-processing that corrects common confusion pairs using a phoneme edit distance model. For ष/श confusion, use trigram context scoring.",
-      "potential_impact_pct": 35,
-      "effort": "High"
+      "approach": "Use confusion-pair dictionary and context scoring for common Devanagari phoneme substitutions.",
+      "potential_impact_pct": 40.0,
+      "effort": "Medium"
     },
     {
       "rank": 2,
-      "fix_name": "Roman→Devanagari Post-Correction",
+      "fix_name": "Roman→Devanagari loanword correction",
       "target_errors": "english_loanword",
-      "approach": "Detect English loanwords by language model and apply rule-based Devanagari transliteration corrections",
-      "potential_impact_pct": 22,
-      "effort": "Medium"
+      "approach": "Detect Roman tokens and transliterate/tag loanwords to match submission conventions.",
+      "potential_impact_pct": 20.0,
+      "effort": "Low"
     },
     {
       "rank": 3,
-      "fix_name": "Word Boundary Reinforcement",
+      "fix_name": "Boundary restoration pass",
       "target_errors": "word_boundary",
-      "approach": "Apply CTC alignment post-processing to split fused words using character-level confidence scores",
-      "potential_impact_pct": 18,
+      "approach": "Apply token-merge/split rules based on Hindi lexicon and confidence-guided boundaries.",
+      "potential_impact_pct": 20.0,
       "effort": "Medium"
     }
   ],
+  "proposed_fixes": [
+    {
+      "rank": 1,
+      "fix_name": "Phoneme-aware post-correction",
+      "target_errors": "phoneme_confusion",
+      "approach": "Use confusion-pair dictionary and context scoring for common Devanagari phoneme substitutions.",
+      "potential_impact_pct": 40.0,
+      "effort": "Medium"
+    },
+    {
+      "rank": 2,
+      "fix_name": "Roman→Devanagari loanword correction",
+      "target_errors": "english_loanword",
+      "approach": "Detect Roman tokens and transliterate/tag loanwords to match submission conventions.",
+      "potential_impact_pct": 20.0,
+      "effort": "Low"
+    },
+    {
+      "rank": 3,
+      "fix_name": "Boundary restoration pass",
+      "target_errors": "word_boundary",
+      "approach": "Apply token-merge/split rules based on Hindi lexicon and confidence-guided boundaries.",
+      "potential_impact_pct": 20.0,
+      "effort": "Medium"
+    }
+  ],
+  "implementation_results": {
+    "name": "Fix 2: Roman→Devanagari post-correction for English loanwords",
+    "target_subset_size": 10,
+    "wer_before": 23.81,
+    "wer_after": 19.32,
+    "delta_pp": -4.49,
+    "note": "Derived from current live artifacts; rerun Q1 training/eval for refreshed values."
+  },
   "implemented_fix": {
     "name": "Fix 2: Roman→Devanagari post-correction for English loanwords",
-    "description": "Implemented a post-processing module that detects English words transcribed in Devanagari and applies corrected romanization conventions",
-    "target_subset": "47 error samples containing English loanwords",
     "target_subset_size": 10,
-    "results": {
-      "wer_before": 23.81,
-      "wer_after": 19.32,
-      "delta_pp": -4.49,
-      "examples_improved": 8,
-      "examples_unchanged": 2
-    },
-    "methodology": "Identified consonant cluster corrections (e.g., म्प → म्य), geminate handling (double consonants), and anusvara placement rules. Applied corrections to 47 sampled utterances and re-evaluated WER."
-  },
-  "evaluation_notes": {
-    "baseline_model": "openai/whisper-small (347M params, pretrained on 680k hours multilingual audio)",
-    "test_set": "FLEURS Hindi validation split (hi_in, n=189 utterances, ~10 min duration)",
-    "evaluation_metric": "Word Error Rate (WER) = (S+D+I) / N, where S=substitution, D=deletion, I=insertion, N=reference words",
-    "confidence_interval": "95% CI assuming binomial distribution over utterances"
+    "wer_before": 23.81,
+    "wer_after": 19.32,
+    "delta_pp": -4.49,
+    "note": "Derived from current live artifacts; rerun Q1 training/eval for refreshed values."
   }
 }

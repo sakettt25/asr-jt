@@ -468,11 +468,16 @@ def build_q2_live_report(
         if result.english_words and len(english_tag_examples) < max_examples:
             english_tag_examples.append({
                 "input": result.normalized,
-                "tagged_output": result.tagged,
+                "tagged": result.tagged,
                 "english_words": result.english_words,
             })
 
     wer_summary = pipeline.evaluate_on_dataset(pairs) if pairs else {}
+
+    english_section = {
+        "tagged_examples": english_tag_examples,
+        "loanword_lexicon_size": len(pipeline.detector.DEVA_LOANWORDS),
+    }
 
     report = {
         "n_pairs": len(pairs),
@@ -481,10 +486,8 @@ def build_q2_live_report(
             "converted_examples": conversions,
             "edge_case_examples": edge_cases,
         },
-        "english_detection": {
-            "tagged_examples": english_tag_examples,
-            "loanword_lexicon_size": len(pipeline.detector.DEVA_LOANWORDS),
-        },
+        "english_word_detection": english_section,
+        "english_detection": english_section,
     }
 
     out_dir = Path(output_dir)

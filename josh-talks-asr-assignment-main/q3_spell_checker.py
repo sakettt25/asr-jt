@@ -519,6 +519,23 @@ def build_q3_live_report(
                 "note": "Computed from provided reviewed low-confidence labels",
             }
 
+    reason_series = df["reason"].fillna("").astype(str)
+    reason_prefix = reason_series.apply(lambda item: item.split(";")[0].strip() if item else "unspecified")
+    top_unreliable = (
+        reason_prefix.value_counts().head(5).to_dict()
+        if not reason_prefix.empty
+        else {}
+    )
+
+    words_classification = {
+        "total_words": int(len(df)),
+        "correct_spelling": correct_count,
+        "incorrect_spelling": incorrect_count,
+        "low_confidence": int(len(low_conf_df)),
+        "high_confidence": int((df["confidence"] == Confidence.HIGH.value).sum()),
+        "medium_confidence": int((df["confidence"] == Confidence.MEDIUM.value).sum()),
+    }
+
     report = {
         "total_words": int(len(df)),
         "correct_spelling_count": correct_count,
@@ -526,7 +543,21 @@ def build_q3_live_report(
         "low_confidence_count": int(len(low_conf_df)),
         "results_csv": results_csv,
         "low_confidence_sample_csv": str(low_sample_path).replace("\\", "/"),
+        "approach": {
+            "summary": "Hybrid Hindi spell classification using dictionary checks, script validation, character-sequence heuristics, and confidence bucketing.",
+            "inputs": ["tokenized words from ASR output"],
+            "outputs": ["verdict", "confidence", "reason"],
+        },
+        "words_classification": words_classification,
         "low_confidence_review": review_stats,
+        "unreliable_categories": [
+            {
+                "category": key,
+                "count": int(value),
+                "note": "Frequent low-trust reason observed in live spell-check output",
+            }
+            for key, value in top_unreliable.items()
+        ],
     }
 
     report_path = out_dir / "report.json"
